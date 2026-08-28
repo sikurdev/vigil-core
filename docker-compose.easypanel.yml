@@ -1,0 +1,88 @@
+name: vigil-core
+
+x-service-restart: &restart
+  restart: unless-stopped
+
+x-database-url: &database-url
+  DATABASE_URL: postgresql://vigil:${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in Easypanel}@postgres:5432/vigil
+
+services:
+  postgres:
+    <<: *restart
+    image: postgres:18-alpine
+    environment:
+      POSTGRES_USER: vigil
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in Easypanel}
+      POSTGRES_DB: vigil
+    volumes:
+      - pgdata:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U vigil -d vigil"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  migrate:
+    image: ghcr.io/sikurdev/vigil-core-worker:${VIGIL_VERSION:-1.29.0}
+    command: ["node_modules/.bin/drizzle-kit", "migrate"]
+    environment:
+      <<: *database-url
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  web:
+    <<: *restart
+    image: ghcr.io/sikurdev/vigil-core-web:${VIGIL_VERSION:-1.29.0}
+    environment:
+      <<: *database-url
+      BETTER_AUTH_SECRET: ${BETTER_AUTH_SECRET:?set BETTER_AUTH_SECRET in Easypanel}
+      APP_URL: ${APP_URL:?set APP_URL to the public Vigil URL}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      RESEND_API_KEY: ${RESEND_API_KEY:-}
+      EMAIL_FROM: ${EMAIL_FROM:-Vigil <onboarding@resend.dev>}
+      DEMO_MODE: ${DEMO_MODE:-false}
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+      ALLOW_PRIVATE_MONITOR_TARGETS: ${ALLOW_PRIVATE_MONITOR_TARGETS:-false}
+      RDAP_BASE_URL: ${RDAP_BASE_URL:-https://rdap.org}
+      TWILIO_ACCOUNT_SID: ${TWILIO_ACCOUNT_SID:-}
+      TWILIO_AUTH_TOKEN: ${TWILIO_AUTH_TOKEN:-}
+      TWILIO_FROM_NUMBER: ${TWILIO_FROM_NUMBER:-}
+    healthcheck:
+      test:
+        - CMD
+        - node
+        - -e
+        - fetch('http://localhost:3000/api/health').then((r)=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+
+  worker:
+    <<: *restart
+    image: ghcr.io/sikurdev/vigil-core-worker:${VIGIL_VERSION:-1.29.0}
+    environment:
+      <<: *database-url
+      BETTER_AUTH_SECRET: ${BETTER_AUTH_SECRET:?set BETTER_AUTH_SECRET in Easypanel}
+      APP_URL: ${APP_URL:?set APP_URL to the public Vigil URL}
+      RESEND_API_KEY: ${RESEND_API_KEY:-}
+      EMAIL_FROM: ${EMAIL_FROM:-Vigil <onboarding@resend.dev>}
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+      ALLOW_PRIVATE_MONITOR_TARGETS: ${ALLOW_PRIVATE_MONITOR_TARGETS:-false}
+      MONITOR_SCHEDULER_BATCH: ${MONITOR_SCHEDULER_BATCH:-5000}
+      RDAP_BASE_URL: ${RDAP_BASE_URL:-https://rdap.org}
+      TWILIO_ACCOUNT_SID: ${TWILIO_ACCOUNT_SID:-}
+      TWILIO_AUTH_TOKEN: ${TWILIO_AUTH_TOKEN:-}
+      TWILIO_FROM_NUMBER: ${TWILIO_FROM_NUMBER:-}
+    sysctls:
+      net.ipv4.ping_group_range: "0 2147483647"
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+
+volumes:
+  pgdata:
