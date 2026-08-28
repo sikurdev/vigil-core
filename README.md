@@ -86,6 +86,20 @@ dump path with the safety checks around it, and `update --to <ref>` and
 [QUICK_START.md](QUICK_START.md) has the bare-metal path and the
 first-monitor walkthrough.
 
+## Container images
+
+Versioned web and worker images are published to GHCR:
+
+```bash
+docker pull ghcr.io/sikurdev/vigil-core-web:1.29.0
+docker pull ghcr.io/sikurdev/vigil-core-worker:1.29.0
+```
+
+For Easypanel, deploy
+[`docker-compose.easypanel.yml`](docker-compose.easypanel.yml) as a
+Compose service, set its required environment variables, and route the
+domain to `web` on port 3000.
+
 ## Limitations
 
 Worth knowing before you deploy:
