@@ -281,3 +281,17 @@ jobs:
             exit 1
           fi
           docker buildx imagetools create "${tags[@]}" "${sources[@]}"
+
+  verify-public-pulls:
+    name: Verify anonymous pulls
+    needs: [prepare, merge]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Pull images without authentication
+        shell: bash
+        env:
+          DOCKER_CONFIG: ${{ runner.temp }}/anonymous-docker
+        run: |
+          mkdir -p "$DOCKER_CONFIG"
+          docker pull ghcr.io/sikurdev/vigil-core-web:${{ needs.prepare.outputs.version }}
+          docker pull ghcr.io/sikurdev/vigil-core-worker:${{ needs.prepare.outputs.version }}
