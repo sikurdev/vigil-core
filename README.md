@@ -12,6 +12,8 @@ install.
 [![License: Apache 2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
 [![Self-hosted](https://img.shields.io/badge/self--hosted-yes-brightgreen.svg)](docs/DEPLOYMENT.md)
 
+<a href="https://zenith.hosting/host/vigil-core"><img src="https://cdn.zenith.hosting/buttons/deploy-with-zenith.svg" alt="Deploy with Zenith" height="52"></a>
+
 |                                                                   |                                                              |
 | ----------------------------------------------------------------- | ------------------------------------------------------------ |
 | ![Dashboard](docs/screenshots/dashboard.png)                      | ![Monitor detail](docs/screenshots/monitor-detail.png)       |
