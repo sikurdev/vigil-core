@@ -23,7 +23,7 @@ services:
       retries: 10
 
   migrate:
-    image: ghcr.io/sikurdev/vigil-core-worker:${VIGIL_VERSION:-1.29.0}
+    image: ghcr.io/sikurdev/vigil-core-worker:${VIGIL_VERSION:-1.30.0}
     command: ["node_modules/.bin/drizzle-kit", "migrate"]
     environment:
       <<: *database-url
@@ -33,7 +33,7 @@ services:
 
   web:
     <<: *restart
-    image: ghcr.io/sikurdev/vigil-core-web:${VIGIL_VERSION:-1.29.0}
+    image: ghcr.io/sikurdev/vigil-core-web:${VIGIL_VERSION:-1.30.0}
     environment:
       <<: *database-url
       BETTER_AUTH_SECRET: ${BETTER_AUTH_SECRET:?set BETTER_AUTH_SECRET in Easypanel}
@@ -45,15 +45,16 @@ services:
       LOG_LEVEL: ${LOG_LEVEL:-info}
       ALLOW_PRIVATE_MONITOR_TARGETS: ${ALLOW_PRIVATE_MONITOR_TARGETS:-false}
       RDAP_BASE_URL: ${RDAP_BASE_URL:-https://rdap.org}
-      TWILIO_ACCOUNT_SID: ${TWILIO_ACCOUNT_SID:-}
-      TWILIO_AUTH_TOKEN: ${TWILIO_AUTH_TOKEN:-}
-      TWILIO_FROM_NUMBER: ${TWILIO_FROM_NUMBER:-}
+    # Readiness. Easypanel routes traffic at a container it believes is
+    # healthy, and a container that answers liveness while the migrate
+    # job is still running would take requests its first query cannot
+    # serve.
     healthcheck:
       test:
         - CMD
         - node
         - -e
-        - fetch('http://localhost:3000/api/health').then((r)=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))
+        - fetch('http://localhost:3000/api/ready').then((r)=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))
       interval: 30s
       timeout: 5s
       retries: 3
@@ -64,7 +65,7 @@ services:
 
   worker:
     <<: *restart
-    image: ghcr.io/sikurdev/vigil-core-worker:${VIGIL_VERSION:-1.29.0}
+    image: ghcr.io/sikurdev/vigil-core-worker:${VIGIL_VERSION:-1.30.0}
     environment:
       <<: *database-url
       BETTER_AUTH_SECRET: ${BETTER_AUTH_SECRET:?set BETTER_AUTH_SECRET in Easypanel}
@@ -75,9 +76,6 @@ services:
       ALLOW_PRIVATE_MONITOR_TARGETS: ${ALLOW_PRIVATE_MONITOR_TARGETS:-false}
       MONITOR_SCHEDULER_BATCH: ${MONITOR_SCHEDULER_BATCH:-5000}
       RDAP_BASE_URL: ${RDAP_BASE_URL:-https://rdap.org}
-      TWILIO_ACCOUNT_SID: ${TWILIO_ACCOUNT_SID:-}
-      TWILIO_AUTH_TOKEN: ${TWILIO_AUTH_TOKEN:-}
-      TWILIO_FROM_NUMBER: ${TWILIO_FROM_NUMBER:-}
     sysctls:
       net.ipv4.ping_group_range: "0 2147483647"
     depends_on:

@@ -178,8 +178,8 @@ cmd_update() {
   fi
   rm -f "$log"
 
-  wait_for "app health" "$timeout" app_healthy ||
-    update_failed "the app never answered /api/health within ${timeout}s on the new version."
+  wait_for "app health" "$timeout" app_ready ||
+    update_failed "the app never answered /api/ready within ${timeout}s on the new version."
   wait_for "worker" "$timeout" worker_live ||
     update_failed "the worker never recorded a scheduler pass within ${timeout}s on the new version."
 

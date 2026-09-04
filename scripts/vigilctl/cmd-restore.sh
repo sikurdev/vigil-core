@@ -132,8 +132,8 @@ cmd_restore() {
   compose up -d >/dev/null 2>&1 ||
     restore_failed "$safety" "the stack did not start after the restore."
 
-  wait_for "app health" "$timeout" app_healthy ||
-    restore_failed "$safety" "the app never answered /api/health within ${timeout}s."
+  wait_for "app health" "$timeout" app_ready ||
+    restore_failed "$safety" "the app never answered /api/ready within ${timeout}s."
   wait_for "worker" "$timeout" worker_live ||
     restore_failed "$safety" "the worker never recorded a scheduler pass within ${timeout}s."
 

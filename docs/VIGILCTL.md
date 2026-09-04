@@ -110,8 +110,8 @@ call it makes is a `ps`, a `SELECT` or an HTTP GET.
 
 It checks the prerequisites, the configuration, compose customization,
 each service, the one-shot `migrate` job, Postgres, whether the
-migration journal matches the migrations in this checkout, the app
-health endpoint, and whether the worker is still scheduling.
+migration journal matches the migrations in this checkout, the app's
+readiness endpoint, and whether the worker is still scheduling.
 
 The worker check is the one worth knowing about. There is no worker HTTP
 endpoint, so doctor asks the job queue: pg-boss stamps

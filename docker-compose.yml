@@ -72,15 +72,20 @@ services:
       # have caught it.
       VIGIL_FLEET_DETAIL: ${VIGIL_FLEET_DETAIL:-false}
       RDAP_BASE_URL: ${RDAP_BASE_URL:-https://rdap.org}
-      TWILIO_ACCOUNT_SID: ${TWILIO_ACCOUNT_SID:-}
-      TWILIO_AUTH_TOKEN: ${TWILIO_AUTH_TOKEN:-}
-      TWILIO_FROM_NUMBER: ${TWILIO_FROM_NUMBER:-}
+    # Readiness, not liveness. What compose does with a healthcheck is
+    # answer `depends_on: service_healthy` and colour `docker ps`, and
+    # both of those questions mean "may this be used", so the probe has
+    # to be the one that refuses an empty or half-migrated database.
+    # `/api/live` would answer yes to a process whose schema does not
+    # exist. Nothing here restarts on the healthcheck — `restart:
+    # unless-stopped` covers a process that dies, which is the only thing
+    # liveness is for.
     healthcheck:
       test:
         - CMD
         - node
         - -e
-        - fetch('http://localhost:3000/api/health').then((r)=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))
+        - fetch('http://localhost:3000/api/ready').then((r)=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))
       interval: 30s
       timeout: 5s
       retries: 3
@@ -130,9 +135,6 @@ services:
       # for rdap.org, fails to route, and every domain monitor reports a
       # false DOWN — a transport error is judged `down`, not `unknown`.
       RDAP_BASE_URL: ${RDAP_BASE_URL:-https://rdap.org}
-      TWILIO_ACCOUNT_SID: ${TWILIO_ACCOUNT_SID:-}
-      TWILIO_AUTH_TOKEN: ${TWILIO_AUTH_TOKEN:-}
-      TWILIO_FROM_NUMBER: ${TWILIO_FROM_NUMBER:-}
     # Lets the worker, which runs as a non-root user, open an
     # unprivileged ICMP datagram socket. Without it every `ping` monitor
     # reports `indeterminate` forever — correctly, since the probe truly

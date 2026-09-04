@@ -325,12 +325,38 @@ migrations_applied() {
 # Health is asked of the app the way the container healthcheck asks it,
 # from inside the container. Not from the host: that would additionally
 # test the published port and whatever is in front of it, and a reverse
-# proxy in the way would make a healthy app report sick. /api/health
-# returns 200 only when the app can reach Postgres, so the one call
-# covers the pair.
-app_healthy() {
-  compose exec -T app node -e "fetch('http://127.0.0.1:3000/api/health').then((r)=>r.json().then((b)=>process.exit(r.ok&&b.status==='ok'?0:1))).catch(()=>process.exit(1))" \
-    >/dev/null 2>&1
+# proxy in the way would make a healthy app report sick.
+#
+# READINESS, not liveness: /api/ready answers 200 only when Postgres is
+# reachable AND every migration this build ships has been applied, so the
+# one call covers the pair — and, unlike the `select 1` it replaced, it
+# refuses an empty or half-migrated database instead of calling it well.
+# `migrations_applied` above asks the same question from outside; when
+# the two disagree, the app is running against a different database from
+# the one this checkout points at.
+# Falls back to `/api/health` on a 404, and that is not belt and braces:
+# `rollback` checks out a PREVIOUS release and rebuilds from it, while
+# the shell functions already loaded in this process are the new ones. A
+# release from before `/api/ready` existed answers 404 forever, so a
+# probe that only knew the new path would report every rollback across
+# this boundary as a failed one - and `rollback_failed` is not a warning,
+# it leaves the operator believing the rollback did not happen.
+#
+# `/api/health` is the alias every release since 1.0 serves, and it means
+# whatever the running release means by it: readiness here, "can reach
+# Postgres" there. Asking for the strict path first and accepting the
+# alias second gets the strictest answer the running code can give.
+app_ready() {
+  compose exec -T app node -e "
+    const ask = (p) =>
+      fetch('http://127.0.0.1:3000' + p).then((r) =>
+        r.status === 404 ? null : r.json().then((b) => r.ok && b.status === 'ok'),
+      );
+    ask('/api/ready')
+      .then((ok) => (ok === null ? ask('/api/health') : ok))
+      .then((ok) => process.exit(ok ? 0 : 1))
+      .catch(() => process.exit(1));
+  " >/dev/null 2>&1
 }
 
 # ── the worker ───────────────────────────────────────────────────────
@@ -383,7 +409,7 @@ stack_healthy() {
   for service in $STACK_SERVICES; do
     [ "$(service_state "$service")" = "running" ] || return 1
   done
-  app_healthy || return 1
+  app_ready || return 1
   worker_live
 }
 

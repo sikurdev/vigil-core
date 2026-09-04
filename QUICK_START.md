@@ -46,7 +46,7 @@ npm run worker:dev          # terminal 2, background checks
 ## Verify the install
 
 ```bash
-npm run typecheck && npm run lint && npm test   # 4669 tests, ~5s
+npm run typecheck && npm run lint && npm test   # 4759 tests, ~5s
 ```
 
 ## Turn on automatic recovery (optional, ~5 minutes)

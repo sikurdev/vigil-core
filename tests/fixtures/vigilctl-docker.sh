@@ -247,7 +247,7 @@ case "$SUB" in
     case "$TOOL" in
       pg_isready) exit 0 ;;
       node)
-        [ "$(flag app_healthy 1)" = "1" ] || exit 1
+        [ "$(flag app_ready 1)" = "1" ] || exit 1
         exit 0
         ;;
       pg_dump)

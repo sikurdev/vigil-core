@@ -1,0 +1,134 @@
+# Publishing Vigil through a Localtonet HTTP/s tunnel, as a Compose overlay.
+#
+#   docker compose -f docker-compose.yml -f docker-compose.localtonet.yml up -d
+#
+# What this changes about the stock stack, and why each one:
+#
+#   1. The app stops publishing a host port. `docker-compose.yml` maps
+#      "3000:3000", which is every interface on the host, including the
+#      public one. `docs/DEPLOYMENT.md` tells operators to put a
+#      TLS-terminating reverse proxy in front of that port, and a proxy
+#      in front of a wildcard listener is a suggestion, not a control:
+#      the origin answers on :3000 whether or not anyone goes through
+#      the proxy. Here there is no proxy to bypass because there is no
+#      published port at all.
+#
+#   2. A second network, `edge`, carries exactly two things: the app and
+#      the tunnel agent. Postgres is not on it. The agent is a process
+#      that accepts instructions from a third party's control plane
+#      about which local address to forward to, so the set of addresses
+#      it can route to is worth making small on purpose rather than
+#      relying on it to only forward where it was told.
+#
+# The tunnel therefore targets 172.31.243.2 on port 3000, which is the
+# address this file pins the app to on the `edge` network.
+#
+# MEASURED, and the reason the address is pinned at all: the Localtonet
+# dashboard rejects a hostname in that field. Entering the Compose
+# service name `app` returns "Please enter valid IP Address." The field
+# is labelled "IP" and it means it (https://localtonet.com/documents/https).
+# An earlier version of this file relied on Docker's embedded DNS
+# resolving `app` for the agent, which it does, and it does not matter:
+# the agent never gets the chance, because the dashboard will not accept
+# the name to begin with. The name is still what the agent resolves if
+# you use the `network_mode: "service:app"` variant instead; see
+# `docs/LOCALTONET.md` section 11.
+#
+# An overlay rather than a second project: `name:` must match the base
+# file or Compose builds a parallel stack with its own network, and the
+# agent then cannot reach the app at all.
+#
+# vigilctl will refuse to drive this install. That is correct and not a
+# bug: `scripts/vigilctl/stack.sh` refuses when the project is running a
+# service `docker-compose.yml` does not define, because it would
+# otherwise rebuild half of a stack it is only holding half the
+# definition of. Pass --allow-customized, or drive this install with
+# `docker compose` directly. docs/LOCALTONET.md says which to pick.
+name: vigil
+
+services:
+  app:
+    # `!reset []` and not an empty list: Compose MERGES sequences from
+    # overlays rather than replacing them, so a plain `ports: []` here
+    # would leave "3000:3000" in place and this file would quietly do
+    # the opposite of what its first paragraph claims.
+    # https://docs.docker.com/reference/compose-file/merge/
+    #
+    # Nothing on the host reaches Vigil after this. That is the point,
+    # and it is also the cost: local checks go through
+    # `docker compose exec`, which docs/LOCALTONET.md spells out. An
+    # operator who wants a local browser session as well should add
+    # `- "127.0.0.1:3000:3000"` BELOW this line (a sequence entry after
+    # a !reset is kept) rather than deleting the reset and going back to
+    # a wildcard bind.
+    ports: !reset []
+    networks:
+      # Named explicitly, both of them. A service with no `networks` key
+      # is on `default`; the moment this overlay names one, the merged
+      # service is on exactly what is named here, and omitting `default`
+      # would take Postgres away from the app.
+      default: null
+      edge:
+        # Pinned because the tunnel target is an address typed into
+        # somebody else's dashboard, and Compose hands out bridge
+        # addresses in start order. An unpinned app that gets recreated
+        # can come back on a different address, and the tunnel would
+        # then forward to whatever holds the old one. Nothing warns you.
+        #
+        # Only the app is pinned. The agent takes whatever is free,
+        # because nothing points at the agent by address.
+        ipv4_address: 172.31.243.2
+
+  localtonet:
+    # No tag is documented. https://localtonet.com/documents/docker
+    # shows `docker run localtonet/localtonet`, which resolves `latest`,
+    # and no version-pinned tag is published in that page. Pin it to a
+    # digest yourself if an unpinned third-party image in the same
+    # network as your monitoring origin is not acceptable to you; the
+    # guide says how and says what you give up.
+    image: localtonet/localtonet
+    container_name: vigil-localtonet
+    restart: unless-stopped
+    # `--authtoken` is the only argument the Localtonet documentation
+    # gives for the agent, and it is an argument rather than an
+    # environment variable, so the token lands in argv. It is therefore
+    # readable by anything that can run `docker inspect` or read the
+    # process table on this host. `:?` rather than `:-` deliberately: an
+    # empty string would start an agent that authenticates as nobody and
+    # reports the failure one layer further down, where it is harder to
+    # read.
+    command:
+      - "--authtoken"
+      - "${LOCALTONET_AUTHTOKEN:?set LOCALTONET_AUTHTOKEN in .env. Dashboard > My Tokens. .env is gitignored; do not put it in this file.}"
+    networks:
+      - edge
+    depends_on:
+      # Startup ordering only. It does not keep the agent down when the
+      # app later becomes unhealthy, so the tunnel stays up over a dead
+      # origin and the edge forwards to a refusing port. What a client
+      # sees in that window is the edge deciding, not Vigil; measure it
+      # on your own install rather than assuming a status code.
+      app:
+        condition: service_healthy
+
+networks:
+  # An explicit subnet, because pinning an address inside a network
+  # whose range Docker chose is not something Compose will do: the
+  # `ipv4_address` above needs an `ipam` block naming the range it
+  # falls in, or Compose refuses the file.
+  #
+  # /29 is eight addresses, which is five usable after the network
+  # address, Docker's gateway on .1 and the broadcast address. This
+  # stack needs two of them. Sized small on purpose: the range is
+  # carved out of the host's routing table for as long as the network
+  # exists, and a /16 for two containers takes 65,534 addresses out of
+  # circulation for nothing.
+  #
+  # Check this range against `ip route` before you copy it. It was clear
+  # on the machine this was measured on; a subnet that collides with
+  # something the host already routes fails in a way that looks like the
+  # tunnel being broken.
+  edge:
+    ipam:
+      config:
+        - subnet: 172.31.243.0/29

@@ -226,10 +226,10 @@ doctor_database() {
 doctor_app() {
   if [ "$(service_state app)" != "running" ]; then
     check_fail "app health" "the app container is not running"
-  elif app_healthy; then
-    check_ok "app health" "/api/health returns ok"
+  elif app_ready; then
+    check_ok "app health" "/api/ready returns ok"
   else
-    check_fail "app health" "/api/health did not answer ok"
+    check_fail "app health" "/api/ready did not answer ok"
     detail "Read the app output: docker compose logs app"
   fi
 

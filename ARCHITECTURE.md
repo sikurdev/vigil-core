@@ -668,9 +668,9 @@ recipients at fire time: the **on-call person** (rotation math in
 wrapped over the ordered members), **all responders** (owner/admin/
 responder members), or a **specific person**. It then delivers over one
 channel (`modules/notifications/channels.ts`): **email** (the transport
-above) or **SMS/voice** via Twilio when `TWILIO_ACCOUNT_SID`,
-`TWILIO_AUTH_TOKEN` and `TWILIO_FROM_NUMBER` are set, otherwise a logged
-no-op. Every step records an _internal_ system event (never shown on the
+above) or **SMS/voice** via Twilio.
+
+Every step records an _internal_ system event (never shown on the
 public status page) summarising who was paged. Monitors with no policy
 keep the original behavior: notify owners/admins/responders once.
 

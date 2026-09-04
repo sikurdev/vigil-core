@@ -33,7 +33,8 @@ Vigil is self-hosted, so you own the deployment surface. The essentials:
 
 What ships hardened by default: security headers, non-root container
 images, RBAC guards on every mutation, HMAC-signed webhooks, the
-outbound egress policy below, and a database-checked health endpoint.
+outbound egress policy below, and a readiness endpoint that checks the
+database and the migration state rather than only the connection.
 The full security model is documented in
 [ARCHITECTURE.md](ARCHITECTURE.md).
 

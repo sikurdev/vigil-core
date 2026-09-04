@@ -144,8 +144,8 @@ cmd_rollback() {
   compose up -d --build ||
     rollback_failed "$safety" "the previous version did not build or start."
 
-  wait_for "app health" "$timeout" app_healthy ||
-    rollback_failed "$safety" "the app never answered /api/health within ${timeout}s."
+  wait_for "app health" "$timeout" app_ready ||
+    rollback_failed "$safety" "the app never answered /api/ready within ${timeout}s."
   wait_for "worker" "$timeout" worker_live ||
     rollback_failed "$safety" "the worker never recorded a scheduler pass within ${timeout}s."
 

@@ -20,14 +20,6 @@ const envSchema = z.object({
   /** Sender identity for notification emails (Resend must own the domain). */
   EMAIL_FROM: z.string().default("Vigil <onboarding@resend.dev>"),
   /**
-   * Optional Twilio credentials. When all three are set, escalation
-   * steps with an `sms` or `voice` channel deliver via Twilio; otherwise
-   * those channels are inert (logged, never sent).
-   */
-  TWILIO_ACCOUNT_SID: z.string().optional(),
-  TWILIO_AUTH_TOKEN: z.string().optional(),
-  TWILIO_FROM_NUMBER: z.string().optional(),
-  /**
    * The three halves of the outbound egress policy (see
    * `modules/monitors/egress.ts`). Each says whether that channel may
    * reach private and loopback space. None of them can reach cloud
@@ -259,7 +251,3 @@ export const isAiEnabled = Boolean(env.ANTHROPIC_API_KEY);
 
 export const isEmailEnabled = Boolean(env.RESEND_API_KEY);
 
-/** Twilio powers both SMS and voice escalation channels. */
-export const isTwilioEnabled = Boolean(
-  env.TWILIO_ACCOUNT_SID && env.TWILIO_AUTH_TOKEN && env.TWILIO_FROM_NUMBER,
-);

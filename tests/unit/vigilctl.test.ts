@@ -573,10 +573,10 @@ describe("install", () => {
 
   it("fails when the app never becomes healthy, naming the endpoint it waited on", () => {
     const cli = makeInstall();
-    cli.flag("app_healthy", "0");
+    cli.flag("app_ready", "0");
     const result = cli.run(["install", "--yes", "--timeout", "1"]);
     expect(result.status).toBe(1);
-    expect(result.stderr).toContain("/api/health");
+    expect(result.stderr).toContain("/api/ready");
   });
 
   it("fails when the worker never schedules anything", () => {
@@ -949,7 +949,7 @@ describe("update", () => {
   it("refuses to update a stack that is already broken", () => {
     const cli = makeInstall({ git: true });
     cli.markInstalled();
-    cli.flag("app_healthy", "0");
+    cli.flag("app_ready", "0");
     const result = cli.run(["update", "--to", "next", "--yes"]);
     expect(result.status).toBe(20);
     expect(result.stderr).toContain("not healthy");

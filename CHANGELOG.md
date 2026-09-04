@@ -6,6 +6,50 @@ free edition; entries for commercial-only features live in the other
 repository, because they are not in this one and listing them here would
 describe software you do not have.
 
+## 1.30.0 — 2026-09-04
+
+The process now reports liveness and readiness separately, and this
+edition includes a Localtonet deployment path for hosts that cannot
+accept inbound connections.
+
+### Added
+
+- `GET /api/live` answers process liveness without asking Postgres.
+- `GET /api/ready` answers 200 only when Postgres is reachable and the
+  Drizzle migration ledger contains every migration packaged in this
+  build. Empty, partially migrated, unreachable and timed-out databases
+  answer 503. Readiness never runs migrations.
+- `docker-compose.localtonet.yml`, `docs/LOCALTONET.md` and the
+  executable `scripts/localtonet-verify.sh` ship in Core. The overlay
+  exposes no host port and isolates the tunnel agent from Postgres. It
+  pins the app at `172.31.243.2` because the Localtonet dashboard's IP
+  field rejects a Compose service hostname.
+
+### Changed
+
+- `GET /api/health` remains as an exact compatibility alias of strict
+  readiness. The upgrade and rollback paths continue to work with
+  releases from before `/api/ready` existed.
+- Readiness uses a dedicated PostgreSQL pool capped at two connections
+  per web replica. Connection, query and statement deadlines are
+  bounded, and a failed query destroys its socket rather than returning
+  it to the pool. Each web replica can therefore open up to two more
+  PostgreSQL connections.
+- Core no longer contains the three global credentials used only by the
+  commercial SMS and voice escalation ladder, or any environment
+  documentation that claims them. The Twilio SMS and WhatsApp
+  notification providers remain: their credentials are stored in
+  database-configured channels and do not use that global configuration.
+
+### Localtonet limits
+
+- A free Localtonet edge returns its warning page with HTTP 200 unless
+  the request carries `localtonet-skip-warning`. The verification script
+  sends the header and also requires Vigil's readiness body.
+- Published recovery timings describe one installation, one connection
+  and one edge region. They are not an SLA or evidence of sustained
+  availability or throughput; those properties were not measured.
+
 ## 1.29.0 — 2026-08-25
 
 An incident opened by a monitor now carries a snapshot of what was known

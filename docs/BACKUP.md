@@ -135,9 +135,9 @@ will not bring them back:
   sessions and reset tokens are signed with it, and restoring a database
   under a different secret silently signs out every user and invalidates
   every outstanding password-reset link. `DATABASE_URL`, `RESEND_API_KEY`,
-  `ANTHROPIC_API_KEY`, `TWILIO_*` and `POSTGRES_PASSWORD` are in the same
-  file and the same position. Back it up separately, somewhere a database
-  dump is not.
+  `ANTHROPIC_API_KEY`, `POSTGRES_PASSWORD` and every other credential the
+  deployment sets are in the same file and the same position. Back it up
+  separately, somewhere a database dump is not.
 - **Roles, ownership and grants.** The dump is taken with `--no-owner
 --no-privileges` on purpose: the shipped stack connects as `vigil` and a
   local install usually as `postgres`, and an archive that names a role

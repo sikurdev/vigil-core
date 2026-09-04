@@ -24,7 +24,7 @@ production-shaped: Postgres with a persistent volume, a one-shot
 That is the whole install. It validates Docker, writes a `.env` with
 generated secrets (and preserves any you already set), builds the
 images, runs the migrations, starts the app and the worker, waits until
-the app really answers `/api/health` and the worker really schedules,
+the app really answers `/api/ready` and the worker really schedules,
 and prints the endpoint. Running it again when nothing needs doing
 exits 10 and changes nothing, so it is also the way to repair an install
 that was interrupted.
@@ -52,6 +52,18 @@ vigil.yourdomain.com {
     reverse_proxy localhost:3000
 }
 ```
+
+Note that the compose file publishes `3000` on every interface, so the
+proxy is where TLS is added rather than something the app is hidden
+behind. On a host you do not want Vigil reachable on directly, bind the
+published port to loopback and let the proxy do the reaching.
+
+A host with no public IP at all, behind NAT or a firewall you do not
+administer, has a third option: a reverse tunnel, which needs no
+inbound port and no forwarded router port.
+[LOCALTONET.md](LOCALTONET.md) is a worked example with Localtonet,
+including what you trade away by terminating TLS at somebody else's
+edge.
 
 ### Upgrading a running stack
 
@@ -174,11 +186,40 @@ by the 90-day retention job.
 
 ## Operational notes
 
-- **Health**: `GET /api/health` returns 200 when the app can reach
-  Postgres and 503 otherwise, point load-balancer/orchestrator probes
-  at it (the compose file already does). The worker logs
-  `worker started` on boot and exits non-zero on fatal errors, wire it
-  into your restart policy.
+- **Health**: two probes, and they answer different questions.
+
+  - `GET /api/live`: 200 whenever the process can serve a request. It
+    touches no database and runs no migration. Point a **restart**
+    policy at this one (Kubernetes `livenessProbe`), and nothing else:
+    it answers yes while the database is empty.
+  - `GET /api/ready`: 200 only when Postgres is reachable **and** every
+    migration this build ships is recorded as applied. 503 for an
+    unreachable server, an empty database, and a database left part-way
+    through a migration run. Point **traffic** at this one: load
+    balancers, `readinessProbe`, and anything that gates a deploy.
+
+  `/api/ready` asks on a small pool of its own, never the application's:
+  at most two connections, each destroyed if it has not been established
+  in 1.5 seconds, with the whole probe answering inside 3. The bound is
+  not decoration. A database that accepts a connection and then stops
+  answering never releases one, so a probe borrowing the application's
+  pool would spend it in ten ticks and take the application down with it.
+  Budget two extra Postgres connections per web replica.
+
+  `GET /api/health` is kept as an alias for `/api/ready`, because that
+  is what every healthcheck and external monitor pointed at it since 1.0
+  was already using it for. It has the same body and the same status
+  codes; use the named endpoints in anything new. The compose file
+  points the app's container healthcheck at `/api/ready`.
+
+  All three are unauthenticated and say nothing but `{"status":"ok"}` or
+  `{"status":"unavailable"}`: no version, no schema state, no topology.
+  Which of the three readiness failures it was goes to the app log, not
+  to the caller.
+
+  The worker logs `worker started` on boot and exits non-zero on fatal
+  errors, wire it into your restart policy.
+
 - **Logs**: both processes emit structured JSON (pino) on stdout. Set
   `LOG_LEVEL=debug` temporarily for check-level detail.
 - **Backups**: one `pg_dump` covers everything, see
@@ -194,10 +235,7 @@ by the 90-day retention job.
   ARCHITECTURE.md §8 for the payload and event list.
 - **On-call & escalation**: schedules and escalation policies are
   configured under _Settings → Escalation_; attach a policy to a monitor
-  on its form. Email steps need no extra config. SMS and voice steps
-  deliver through Twilio, set `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`
-  and `TWILIO_FROM_NUMBER` on the **worker** (it runs escalation);
-  without them those steps are a logged no-op and the ladder still runs.
+  on its form. Email steps need no extra config.
   Members set their own escalation phone (E.164) under _Settings →
   General → Your profile_.
 - **Status-page subscriptions**: visitors to a _public_ status page can
@@ -294,10 +332,8 @@ Symptom → cause → fix, from real deployments:
 - **Browser sign-in rejected while `curl` works**: `APP_URL` must equal
   the origin users type into the browser (it's the auth trusted origin).
   A port or scheme mismatch fails exactly this way.
-- **SMS/voice escalation steps never fire**: the three `TWILIO_*`
-  variables must be set **on the worker**. Without them those steps are
-  a logged no-op by design; email steps and the rest of the ladder still
-  run.
+
+
 - **A recovery attempt shows `running` forever**: the worker was
   interrupted mid-attempt (recovery jobs deliberately never retry). The
   nightly retention job closes attempts stuck over an hour as failed;

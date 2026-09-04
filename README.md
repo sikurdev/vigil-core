@@ -91,8 +91,8 @@ first-monitor walkthrough.
 Versioned web and worker images are published to GHCR:
 
 ```bash
-docker pull ghcr.io/sikurdev/vigil-core-web:1.29.0
-docker pull ghcr.io/sikurdev/vigil-core-worker:1.29.0
+docker pull ghcr.io/sikurdev/vigil-core-web:1.30.0
+docker pull ghcr.io/sikurdev/vigil-core-worker:1.30.0
 ```
 
 For Easypanel, deploy
