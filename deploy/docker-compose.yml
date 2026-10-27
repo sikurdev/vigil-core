@@ -1,0 +1,102 @@
+name: vigil-try
+
+# Local look at the published images. No clone and no build.
+# A production install is still ./vigilctl install: it generates the
+# secrets, builds from a checkout, and owns backup, update and rollback.
+# vigilctl does not read this file.
+
+x-service-restart: &restart
+  restart: unless-stopped
+
+x-database-url: &database-url
+  DATABASE_URL: postgresql://vigil:${POSTGRES_PASSWORD:-vigil}@postgres:5432/vigil
+
+services:
+  postgres:
+    <<: *restart
+    # Postgres 18+ required: the schema uses the native uuidv7() function.
+    image: postgres:18-alpine
+    environment:
+      POSTGRES_USER: vigil
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-vigil}
+      POSTGRES_DB: vigil
+    volumes:
+      # postgres:18 stores data under /var/lib/postgresql. Mount the
+      # parent, not /var/lib/postgresql/data, or the data lands in an
+      # anonymous volume and is lost on `down`.
+      - pgdata:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U vigil -d vigil"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  migrate:
+    image: ghcr.io/sikurdev/vigil-core-worker:${VIGIL_VERSION:-1.30.0}
+    # The binary, not npx. Same command as docker-compose.easypanel.yml.
+    command: ["node_modules/.bin/drizzle-kit", "migrate"]
+    environment:
+      <<: *database-url
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  web:
+    <<: *restart
+    image: ghcr.io/sikurdev/vigil-core-web:${VIGIL_VERSION:-1.30.0}
+    ports:
+      # Loopback only. The production compose publishes every interface
+      # and expects a proxy; this file is for a local look.
+      - "127.0.0.1:3000:3000"
+    environment:
+      <<: *database-url
+      BETTER_AUTH_SECRET: ${BETTER_AUTH_SECRET:?set BETTER_AUTH_SECRET in .env to 32+ characters, for example openssl rand -base64 32}
+      APP_URL: ${APP_URL:-http://localhost:3000}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      RESEND_API_KEY: ${RESEND_API_KEY:-}
+      EMAIL_FROM: ${EMAIL_FROM:-Vigil <onboarding@resend.dev>}
+      DEMO_MODE: ${DEMO_MODE:-false}
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+      ALLOW_PRIVATE_MONITOR_TARGETS: ${ALLOW_PRIVATE_MONITOR_TARGETS:-false}
+      VIGIL_FLEET_DETAIL: ${VIGIL_FLEET_DETAIL:-false}
+      RDAP_BASE_URL: ${RDAP_BASE_URL:-https://rdap.org}
+    # Readiness, not liveness. /api/live answers before the schema exists.
+    healthcheck:
+      test:
+        - CMD
+        - node
+        - -e
+        - fetch('http://localhost:3000/api/ready').then((r)=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+
+  worker:
+    <<: *restart
+    image: ghcr.io/sikurdev/vigil-core-worker:${VIGIL_VERSION:-1.30.0}
+    environment:
+      <<: *database-url
+      BETTER_AUTH_SECRET: ${BETTER_AUTH_SECRET:?set BETTER_AUTH_SECRET in .env to 32+ characters, for example openssl rand -base64 32}
+      APP_URL: ${APP_URL:-http://localhost:3000}
+      RESEND_API_KEY: ${RESEND_API_KEY:-}
+      EMAIL_FROM: ${EMAIL_FROM:-Vigil <onboarding@resend.dev>}
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+      ALLOW_PRIVATE_MONITOR_TARGETS: ${ALLOW_PRIVATE_MONITOR_TARGETS:-false}
+      MONITOR_SCHEDULER_BATCH: ${MONITOR_SCHEDULER_BATCH:-5000}
+      # Omitted on purpose. The published image bakes VIGIL_WORKER_VERSION,
+      # and passing an empty value would override that stamp.
+      RDAP_BASE_URL: ${RDAP_BASE_URL:-https://rdap.org}
+    # Lets the non-root worker open an ICMP socket. Without it every
+    # ping monitor reports indeterminate.
+    sysctls:
+      net.ipv4.ping_group_range: "0 2147483647"
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+
+volumes:
+  pgdata:

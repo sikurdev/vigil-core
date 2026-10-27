@@ -9,10 +9,56 @@
 processes and one Postgres: no Redis, no queue broker, no agents to
 install.
 
-[![License: Apache 2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
+Try the [interactive tour](https://vigil-uptime.com/demo/) or read the
+[docs](https://vigil-uptime.com/docs/).
+
+[![License: Apache-2.0](https://img.shields.io/github/license/sikurdev/vigil-core)](LICENSE)
+[![GitHub release](https://img.shields.io/github/v/release/sikurdev/vigil-core)](https://github.com/sikurdev/vigil-core/releases/latest)
+[![GHCR image](https://img.shields.io/badge/ghcr.io-vigil--core--web-2496ED?logo=docker&logoColor=white)](https://github.com/sikurdev/vigil-core/pkgs/container/vigil-core-web)
+[![GitHub stars](https://img.shields.io/github/stars/sikurdev/vigil-core)](https://github.com/sikurdev/vigil-core/stargazers)
 [![Self-hosted](https://img.shields.io/badge/self--hosted-yes-brightgreen.svg)](docs/DEPLOYMENT.md)
 
 <a href="https://zenith.hosting/host/vigil-core"><img src="https://cdn.zenith.hosting/buttons/deploy-with-zenith.svg" alt="Deploy with Zenith" height="52"></a>
+
+## Try it in 2 minutes
+
+The published images and a Postgres. Nothing to clone and nothing to
+build. It listens on `127.0.0.1:3000`.
+
+For a production install, use [`./vigilctl install`](#quick-start)
+below. That generates the secrets, builds from this checkout, and owns
+backup, update and rollback. Pulling the images does none of that.
+
+```bash
+mkdir vigil && cd vigil
+curl -fsSL -o docker-compose.yml \
+  https://raw.githubusercontent.com/sikurdev/vigil-core/main/deploy/docker-compose.yml
+printf 'BETTER_AUTH_SECRET=%s\n' "$(openssl rand -base64 32)" > .env
+docker compose up -d
+```
+
+Open <http://localhost:3000> once `web` is healthy (`docker compose ps`)
+and create the owner account. The worker is already running.
+`docker compose down` stops the stack. `docker compose down -v` deletes
+the database volume as well.
+
+The file is [`deploy/docker-compose.yml`](deploy/docker-compose.yml).
+It pulls `ghcr.io/sikurdev/vigil-core-web` and
+`ghcr.io/sikurdev/vigil-core-worker` at tag `1.30.0`. Set
+`VIGIL_VERSION` to another published tag, including `latest`, to
+override that. From a checkout, write that `.env` as `deploy/.env`
+and run `docker compose -f deploy/docker-compose.yml up -d`. Compose
+reads `.env` from the directory the compose file is in.
+
+Monitors refuse private and loopback addresses unless
+`ALLOW_PRIVATE_MONITOR_TARGETS=true` is set in that `.env`. Leave it
+unset when you are only checking public hosts.
+
+<!--
+TODO: add a short GIF of a check failing, the incident it opens, and the
+status page updating. Do not reference an image until that file is in
+the repository. The stills below are the screenshots that exist today.
+-->
 
 |                                                                   |                                                              |
 | ----------------------------------------------------------------- | ------------------------------------------------------------ |
@@ -70,6 +116,11 @@ organizations' members or retention.
 
 ## Quick start
 
+Recommended production install. `vigilctl` generates the secrets, builds
+the images from this checkout, runs the migrations and waits until the
+app and the worker are answering. The prebuilt images above are a local
+look; `update` and `rollback` do not drive them.
+
 ```bash
 git clone https://github.com/sikurdev/vigil-core.git
 cd vigil-core
@@ -90,14 +141,17 @@ first-monitor walkthrough.
 
 ## Container images
 
-Versioned web and worker images are published to GHCR:
+Versioned web and worker images are published to GHCR. The try-it
+compose file defaults to tag `1.30.0`. Set `VIGIL_VERSION` to another
+published tag, including `latest`, to override it.
 
 ```bash
 docker pull ghcr.io/sikurdev/vigil-core-web:1.30.0
 docker pull ghcr.io/sikurdev/vigil-core-worker:1.30.0
 ```
 
-For Easypanel, deploy
+[`deploy/docker-compose.yml`](deploy/docker-compose.yml) is the file
+the try-it section runs. For Easypanel, deploy
 [`docker-compose.easypanel.yml`](docker-compose.easypanel.yml) as a
 Compose service, set its required environment variables, and route the
 domain to `web` on port 3000.
