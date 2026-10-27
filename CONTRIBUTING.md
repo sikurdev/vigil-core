@@ -1,14 +1,9 @@
 # Contributing
 
-Thanks for taking the time. This is a small project maintained by one
-person, so a little structure keeps it workable.
-
 ## Before you build something big
 
-**Open an issue first** for anything beyond a bug fix. Not to gatekeep, but
-to save you a wasted evening. Some things are deliberately out of
-scope for Core (see "Scope" below), and it's better to hear that before
-you write the code than after.
+**Open an issue first** for anything beyond a bug fix. Some things are
+out of scope for Core (see "Scope" below).
 
 Bug fixes, documentation fixes, and test additions need no preamble:
 send the pull request.
@@ -70,16 +65,13 @@ New behavior needs a test. The suite is split:
 
 ## Scope
 
-Core aims to be a complete uptime monitor for one team: forty
-check types, incidents, status pages, email and webhook alerts. Things
-that make it a bigger product (multi-tenancy, automatic recovery,
-on-call rotation, paging over SMS) live in the commercial edition and
-won't be merged here. That boundary is stated plainly in the README so
-nobody is surprised by it.
+Core is an uptime monitor for one team: forty check types, incidents,
+status pages, email and webhook alerts. Multi-tenancy, automatic
+recovery, on-call rotation and SMS paging are commercial and will not
+be merged here. See the README.
 
-Everything inside that scope is fair game, and the limitations list in
-the README is a decent place to look for something worth doing;
-**more notification providers** especially.
+**More notification providers** are the gap called out under Limitations
+in the README.
 
 ## Licensing your contribution
 
@@ -88,12 +80,11 @@ you deliberately submit for inclusion is contributed under the same
 terms unless you say otherwise, so **there is no CLA to sign and no
 copyright to assign.**
 
-Being plain about the consequence: Apache-2.0 permits the maintainer to
-include your contribution in the commercial edition, which is sold. You
-keep your copyright, your name stays on the commit, and you can use
-your own work anywhere. If that trade is not one you want to make, say
-so in the issue; a bug report with a clear reproduction is genuinely
-valuable on its own and costs you nothing.
+Apache-2.0 lets the maintainer include your contribution in the
+commercial edition, which is sold. You keep your copyright, your name
+stays on the commit, and you can use your own work anywhere. If you do
+not want that, say so in the issue. A bug report with a clear
+reproduction is useful on its own.
 
 ## Code of conduct
 
