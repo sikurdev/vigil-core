@@ -5,12 +5,11 @@
 
 # Vigil Core
 
-**Self-hosted uptime monitoring, incidents and status pages.** Two
-processes and one Postgres: no Redis, no queue broker, no agents to
-install.
+Self-hosted uptime monitoring, incidents and status pages. Two processes
+and one Postgres. No Redis, no queue broker, no agents.
 
-Try the [interactive tour](https://vigil-uptime.com/demo/) or read the
-[docs](https://vigil-uptime.com/docs/).
+[Interactive tour](https://vigil-uptime.com/demo/) ·
+[Docs](https://vigil-uptime.com/docs/)
 
 [![License: Apache-2.0](https://img.shields.io/github/license/sikurdev/vigil-core)](LICENSE)
 [![GitHub release](https://img.shields.io/github/v/release/sikurdev/vigil-core)](https://github.com/sikurdev/vigil-core/releases/latest)
@@ -22,12 +21,12 @@ Try the [interactive tour](https://vigil-uptime.com/demo/) or read the
 
 ## Try it in 2 minutes
 
-The published images and a Postgres. Nothing to clone and nothing to
-build. It listens on `127.0.0.1:3000`.
+Published images and Postgres. No clone, no build. Listens on
+`127.0.0.1:3000`.
 
-For a production install, use [`./vigilctl install`](#quick-start)
-below. That generates the secrets, builds from this checkout, and owns
-backup, update and rollback. Pulling the images does none of that.
+For production, use [`./vigilctl install`](#quick-start). It generates
+secrets, builds from this checkout, and does backup, update and
+rollback. This path does not.
 
 ```bash
 mkdir vigil && cd vigil
@@ -40,19 +39,17 @@ docker compose up -d
 Open <http://localhost:3000> once `web` is healthy (`docker compose ps`)
 and create the owner account. The worker is already running.
 `docker compose down` stops the stack. `docker compose down -v` deletes
-the database volume as well.
+the database volume.
 
-The file is [`deploy/docker-compose.yml`](deploy/docker-compose.yml).
-It pulls `ghcr.io/sikurdev/vigil-core-web` and
-`ghcr.io/sikurdev/vigil-core-worker` at tag `1.30.0`. Set
-`VIGIL_VERSION` to another published tag, including `latest`, to
-override that. From a checkout, write that `.env` as `deploy/.env`
-and run `docker compose -f deploy/docker-compose.yml up -d`. Compose
-reads `.env` from the directory the compose file is in.
+[`deploy/docker-compose.yml`](deploy/docker-compose.yml) pulls
+`ghcr.io/sikurdev/vigil-core-web` and `ghcr.io/sikurdev/vigil-core-worker`
+at tag `1.30.0`. Set `VIGIL_VERSION` to another published tag, including
+`latest`. From a checkout, write `.env` as `deploy/.env` and run
+`docker compose -f deploy/docker-compose.yml up -d`. Compose reads
+`.env` from the directory the compose file is in.
 
 Monitors refuse private and loopback addresses unless
-`ALLOW_PRIVATE_MONITOR_TARGETS=true` is set in that `.env`. Leave it
-unset when you are only checking public hosts.
+`ALLOW_PRIVATE_MONITOR_TARGETS=true` is set in that `.env`.
 
 <!--
 TODO: add a short GIF of a check failing, the incident it opens, and the
@@ -68,58 +65,54 @@ the repository. The stills below are the screenshots that exist today.
 | ![Delivery history](docs/screenshots/notification-deliveries.png) | ![Uptime Kuma import](docs/screenshots/kuma-import.png)      |
 | ![Team roles](docs/screenshots/roles.png)                         | ![Status-page settings](docs/screenshots/branding.png)       |
 
----
-
 ## What it does
 
-- **Forty check types**, behind a registry. The web: HTTP(S), JSON
-  query, a real browser engine, TCP/port, UDP, ping (ICMP), DNS records,
-  TLS-certificate and domain-registration expiry. Databases: PostgreSQL,
+- **Forty check types**, in a registry. HTTP(S), JSON query, a real
+  browser engine, TCP/port, UDP, ping (ICMP), DNS records,
+  TLS-certificate expiry, domain-registration expiry. PostgreSQL,
   MySQL / MariaDB, MongoDB, Redis, SQL Server, Oracle, Elasticsearch,
-  Memcached. Messaging: MQTT, Kafka, RabbitMQ. Infrastructure: SSH, FTP,
-  IMAP, SMTP, LDAP, NTP, SNMP, RADIUS, gRPC, WebSocket, SIP, Docker
-  containers, systemd services, Tailscale, Globalping, Steam and GameDig.
-  And three that dial nothing: push heartbeats, groups derived from other
-  monitors, and a status an operator sets by hand. Adding one is five
-  files and no dispatch to edit. Everything but PostgreSQL speaks the
-  wire protocol directly, so **not one of them added a dependency**:
-  twenty-six types arrived since 1.12.0 and `package.json` is unchanged.
+  Memcached. MQTT, Kafka, RabbitMQ. SSH, FTP, IMAP, SMTP, LDAP, NTP,
+  SNMP, RADIUS, gRPC, WebSocket, SIP, Docker containers, systemd
+  services, Tailscale, Globalping, Steam, GameDig. Push heartbeats,
+  groups derived from other monitors, and a hand-set status dial
+  nothing. A new type is five files and no dispatch edit. Everything
+  but PostgreSQL speaks the wire protocol directly. Twenty-six types
+  arrived since 1.12.0, and `package.json` is unchanged.
 - **Assertions**: expected status, response-time thresholds, body
   contains or does not contain a keyword, DNS record values, days left
   on a certificate. A 200 that serves an error page is caught.
-- **Scheduling that adapts.** The interval you set is a baseline: a
-  suspicious monitor is probed harder and a steady one backs off. The
-  minimum is two seconds on the ordinary scheduler, or 500 ms for
-  HTTP, JSON and TCP monitors on the high-frequency plane.
-- **Incidents**: opened and resolved by the check loop, with a failure
-  window measured in seconds rather than a count of checks. Severity, a
-  lifecycle, an append-only timeline, internal-only notes and a
-  markdown postmortem.
-- **Status pages**: as many as you like, each with its own URL,
+- **Scheduling.** The interval you set is a baseline. A suspicious
+  monitor is probed more often. A steady one backs off. Minimum is
+  two seconds, or 500 ms for HTTP, JSON and TCP on the high-frequency
+  plane.
+- **Incidents** open and resolve in the check loop. The failure window
+  is in seconds, not a count of checks. Severity, a lifecycle, an
+  append-only timeline, internal-only notes, a markdown postmortem.
+- **Status pages**: as many as you want. Each has its own URL,
   components, 90-day uptime bars and incident history. Public, private
   or password-protected, with double-opt-in email subscribers.
-- **Team and roles**: owner, admin, responder, viewer. Viewers are
-  read-only at the server boundary, not by hiding a button.
-- **Audit trail**: every mutation recorded with actor, target and
-  metadata, and a page to read it on.
-- **Alerts**: member email plus 25 native provider types behind one
-  channel editor and one delivery pipeline, with no cap on how many
-  channels you configure. Credentials are stored encrypted, deliveries
-  go through a transactional outbox with retries and per-channel rate
-  limits, and a delivery history shows provider, event, attempts, final
-  status and a redacted error. Signed webhooks keep their HMAC-SHA-256
-  signature and versioned payload. Anything not on the list can be
-  reached through an Apprise server you run.
+- **Roles**: owner, admin, responder, viewer. Viewers are read-only on
+  the server, not by hiding a button.
+- **Audit log**: every mutation records actor, target and metadata.
+  There is a page for it.
+- **Alerts**: member email plus 25 native provider types, one channel
+  editor, one delivery pipeline, no cap on channels. Credentials are
+  stored encrypted. Deliveries go through a transactional outbox with
+  retries and per-channel rate limits. Delivery history shows provider,
+  event, attempts, final status and a redacted error. Signed webhooks
+  keep their HMAC-SHA-256 signature and versioned payload. Anything
+  else goes through an Apprise server you run.
 
-No license key, no telemetry, no expiry, and no cap on monitors, users,
+No license key, no telemetry, no expiry. No cap on monitors, users,
 organizations' members or retention.
 
 ## Quick start
 
-Recommended production install. `vigilctl` generates the secrets, builds
-the images from this checkout, runs the migrations and waits until the
-app and the worker are answering. The prebuilt images above are a local
-look; `update` and `rollback` do not drive them.
+This is the production install. `vigilctl` generates the secrets, builds
+the images from this checkout, runs the migrations, and waits until the app and
+the worker answer, then prints the endpoint. It needs Docker and bash.
+`update` and `rollback` apply to this install, not to the prebuilt
+images above.
 
 ```bash
 git clone https://github.com/sikurdev/vigil-core.git
@@ -127,136 +120,114 @@ cd vigil-core
 ./vigilctl install
 ```
 
-That generates the secrets, builds the images, runs the migrations,
-starts the app and the worker and waits until both are really answering,
-then prints the endpoint. Docker and bash are all it needs.
-
-The same CLI owns the rest of the lifecycle: `./vigilctl doctor` says
-what is wrong without changing anything, `backup` and `restore` use the
-dump path with the safety checks around it, and `update --to <ref>` and
-`rollback` move the checkout and the database together.
-[docs/VIGILCTL.md](docs/VIGILCTL.md) is the reference;
-[QUICK_START.md](QUICK_START.md) has the bare-metal path and the
-first-monitor walkthrough.
+`./vigilctl doctor` reports what is wrong and changes nothing. `backup`
+and `restore` use the dump path and its safety checks.
+`update --to <ref>` and `rollback` move the checkout and the database
+together. Reference: [docs/VIGILCTL.md](docs/VIGILCTL.md). Bare metal
+and the first monitor: [QUICK_START.md](QUICK_START.md).
 
 ## Container images
-
-Versioned web and worker images are published to GHCR. The try-it
-compose file defaults to tag `1.30.0`. Set `VIGIL_VERSION` to another
-published tag, including `latest`, to override it.
 
 ```bash
 docker pull ghcr.io/sikurdev/vigil-core-web:1.30.0
 docker pull ghcr.io/sikurdev/vigil-core-worker:1.30.0
 ```
 
-[`deploy/docker-compose.yml`](deploy/docker-compose.yml) is the file
-the try-it section runs. For Easypanel, deploy
-[`docker-compose.easypanel.yml`](docker-compose.easypanel.yml) as a
-Compose service, set its required environment variables, and route the
-domain to `web` on port 3000.
+The try-it file defaults to tag `1.30.0`. Set `VIGIL_VERSION` to
+another published tag, including `latest`.
+
+[`deploy/docker-compose.yml`](deploy/docker-compose.yml) is that file.
+For Easypanel, deploy
+[`docker-compose.easypanel.yml`](docker-compose.easypanel.yml), set its
+required environment variables, and route the domain to `web` on port
+3000.
 
 ## Limitations
 
-Worth knowing before you deploy:
-
-- **Checks run from one host.** A monitor going down means _your Vigil
-  host_ could not reach it. The failure window filters blips, but this is
-  not multi-region confirmation and never claims to be. Run Vigil outside
-  the blast radius of what it watches.
+- **Checks run from one host.** A monitor going down means this Vigil
+  host could not reach it. The failure window filters short blips. This
+  is not multi-region confirmation. Run Vigil outside the blast radius
+  of what it watches.
 - **25 native provider types, unlimited channels, plus member email**:
   Slack, Discord, Microsoft Teams, Telegram, Google Chat, Mattermost,
   Rocket.Chat, Matrix, Zulip, LINE, PagerDuty, Jira Service Management,
   Pushover, Gotify, ntfy, Pushbullet, Bark, Web Push, Home Assistant,
   Twilio SMS, Twilio WhatsApp, SMTP, Resend, signed webhooks and Amazon
-  SNS. Uptime Kuma 2.4.0 ships 94 notification providers, so the gap is
-  still real and it is still theirs: a service on their list and not on
-  this one routes there today and not here. What narrows it is the
-  Apprise bridge - point Vigil at an Apprise server you run and it will
-  forward to whatever that server is configured for. That is a bridge,
-  not an integration: those services are not implemented, pinned or
-  tested here, and none of them is counted in the 25.
-- **An import is not a migration of everything.** Every one of Kuma's 31
-  selectable monitor types has an equivalent here, but a type having one
-  is not a promise that every monitor of that type comes across: Vigil's
-  own rules still refuse what they would refuse from the form. Tags and
-  maintenance windows have no counterpart in Core and are reported rather
-  than carried; notification providers do have one here, but no
-  credential is ever read out of a Kuma database, so those are reported
-  too and set up again under Settings. `docs/KUMA-IMPORT.md` states both
-  numbers and lists every refusal.
-- **No scheduled suppression.** Core has no maintenance windows, so a
-  planned deploy alerts like an outage. Pause the monitors for the
-  duration, or accept the noise.
-- **One organization per install.** Fine for a team watching its own
-  systems; not built to run many separate clients side by side.
+  SNS. Uptime Kuma 2.4.0 has 94 notification providers. A service on
+  that list and not on this one has no native provider here. Point
+  Vigil at an Apprise server you run and it forwards to whatever that
+  server is configured for. That is a bridge, not an integration: those
+  services are not implemented, pinned or tested here, and none of them
+  is counted in the 25.
+- **Kuma import.** Each of Kuma's 31 selectable monitor types has an
+  equivalent here. That does not mean every monitor of that type
+  imports. Vigil still refuses what it would refuse from the form. Tags
+  and maintenance windows have no counterpart in Core and are reported,
+  not imported. Notification providers do have a counterpart, but no
+  credential is read from a Kuma database. Those are reported and set
+  up again under Settings. [docs/KUMA-IMPORT.md](docs/KUMA-IMPORT.md)
+  states both numbers and lists every refusal.
+- **No maintenance windows.** A planned deploy alerts like an outage.
+  Pause the monitors, or accept the alerts.
+- **One organization per install.** One team. Not several clients side
+  by side.
 
 ## How this repository is produced
 
-Vigil Core is not maintained by hand. It is generated from the
-commercial edition's tree by deleting every file and statement marked
-`@edition:ee`. That same script runs in a required job on every push and
-pull request there: it strips the tree, then lints, typechecks, tests,
-builds, migrates onto an empty Postgres and serves HTTP from what is
-left, so Core cannot quietly fall behind. If it did, the build would be
-red before the release existed.
+Vigil Core is generated from the commercial tree by deleting every file
+and statement marked `@edition:ee`. That script is a required job on
+every push and pull request there. It strips the tree, then lints,
+typechecks, tests, builds, migrates an empty Postgres and serves HTTP.
+If Core falls behind, that build is red.
 
-Both editions are cut from the same commit and carry the same version
-number. **If this repository's version ever trails the commercial one,
-the mechanism is broken and you are looking at the evidence.**
+Both editions are cut from the same commit and use the same version.
+If this repository's version trails the commercial one, that job is
+broken.
 
-History is never rewritten here and releases are never force-pushed, so
-a pull request always has somewhere to land.
+History is not rewritten here. Releases are not force-pushed.
 
 ## Contributing
 
-[CONTRIBUTING.md](CONTRIBUTING.md): there is no CLA and no copyright
-assignment, and it says plainly what Apache-2.0 lets the maintainer do
-with your contribution. Security issues go privately to
-[SECURITY.md](SECURITY.md), not to the issue tracker.
+[CONTRIBUTING.md](CONTRIBUTING.md). No CLA, no copyright assignment. It
+says what Apache-2.0 lets the maintainer do with your contribution.
+Security issues go to [SECURITY.md](SECURITY.md), not the issue tracker.
 
-## The commercial edition
+## Commercial edition
 
-[Vigil](https://vigil-uptime.com) is the same monitor with a set of
-things Core does not have. Uptime Kuma has none of them either, with one
-exception noted in the list: it has maintenance windows and Core does
-not.
+[Vigil](https://vigil-uptime.com) is the same monitor plus the items
+below. Uptime Kuma has none of them, except maintenance windows.
 
-- **Isolate.** Many client organizations in one install, each with its
-  own status pages and unable to see the others.
-- **Rotate.** On-call schedules and escalation ladders that know whose
-  turn it is tonight, with acknowledgement stopping the ladder.
-- **Reach.** SMS and voice through your own Twilio account.
-- **Repair.** Automatic recovery: verify the failure, call a restart
-  hook you own with a signed payload, verify it came back, and page a
-  human only if it did not.
-- **Confirm.** Probe agents you run on your own machines, in the regions
-  you choose, with a quorum deciding the verdict. Vigil ships the agent
-  and hosts nothing.
-- **Suppress and route.** Maintenance windows for planned work, and one
-  routing decision about who hears about what, written once and assigned
-  to the workspace, a service or a single monitor. Windows are the
-  exception above: Uptime Kuma has them and Core does not.
-- **Journey.** Multi-step API and browser journeys, `synthetic-api` and
-  `synthetic-browser`, the only two the paid edition adds. They need a
-  browser container the operator deploys and tables of their own; every
-  protocol check type ships in both editions and always will.
-- **Promise.** Service level objectives with error budgets and
-  burn-rate alerting.
-- **Remediate.** Runbooks: typed remediation with immutable published
-  versions, approvals and resource leases. And operations tasks, the
-  human half of the same engine, for the work a runbook cannot do.
-- **See the fleet.** Whether monitoring is actually running, how far
-  behind the scheduler is, and what each worker replica's last tick did.
+- **Multiple organizations.** Each has its own status pages and cannot
+  see the others.
+- **On-call.** Schedules and escalation ladders. Acknowledgement stops
+  the ladder.
+- **SMS and voice** through your own Twilio account.
+- **Automatic recovery.** Verify the failure, call a restart hook you
+  own with a signed payload, verify it came back, and page a human only
+  if it did not.
+- **Remote probes.** Agents you run on your own machines, in the regions
+  you choose. A quorum decides. Vigil ships the agent and hosts nothing.
+- **Maintenance windows and routing.** Windows for planned work, and one
+  routing rule for who is notified, assigned to the workspace, a service
+  or one monitor. Kuma has maintenance windows. Core does not.
+- **Journeys.** `synthetic-api` and `synthetic-browser` are the only
+  check types the paid edition adds. They need a browser container you
+  deploy, and their own tables. Every protocol check type ships in both
+  editions, and will stay in both.
+- **SLOs.** Error budgets and burn-rate alerting.
+- **Runbooks.** Typed remediation with immutable published versions,
+  approvals and resource leases. Operations tasks are the same engine
+  for work a runbook cannot do.
+- **Fleet.** Whether monitoring is running, how far behind the scheduler
+  is, and what each worker replica's last tick did.
 
-Everything else (every protocol check type, the scheduler, the ledger,
-the audit page, subscribers, password-protected pages) is here, free, and
-stays here.
+Every protocol check type, the scheduler, the ledger, the audit page,
+subscribers and password-protected pages are in Core, free, and stay
+there.
 [What we commit to, in writing](https://vigil-uptime.com/open-source.html).
 
 ## License
 
 [Apache-2.0](LICENSE). Run it, modify it, keep your changes private, run
-it for clients, sell it. There is no copyleft obligation. Vigil Core was
-AGPL-3.0 through 1.0.1; copies obtained under that license remain
-available under it.
+it for clients, sell it. No copyleft. Vigil Core was AGPL-3.0 through
+1.0.1. Copies obtained under that license remain available under it.
