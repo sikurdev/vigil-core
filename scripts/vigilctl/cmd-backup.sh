@@ -70,7 +70,7 @@ cmd_backup() {
       "The database this dumped has no tables. Check that the stack is the one you meant: ./vigilctl doctor"
   fi
 
-  say "backup complete"
+  success "backup complete"
   detail "$output ($entries archive entries)"
   detail "Restore it with: ./vigilctl restore $output"
   exit "$EX_OK"

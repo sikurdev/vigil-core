@@ -1,5 +1,11 @@
 import { judge, type FailureClass, type Verdict } from "./types/conditions";
 import { isActiveType } from "./types/contract";
+import {
+  assessDockerState,
+  nextHoldResolve,
+  type DockerCheckState,
+} from "./types/docker-restart";
+import type { DockerConfig } from "./types/specs/docker";
 import type {
   Assertion,
   FactBag,
@@ -45,6 +51,13 @@ export interface CheckResult extends CheckOutcome {
    * it, which is what it means for this to be additive.
    */
   evidence?: unknown;
+  /**
+   * Next Docker restart memory, when this check had a previous sample
+   * to compare. Absent for every other type, and for a Docker check
+   * that was probed without memory (a remote agent that was not given
+   * any). The recorder writes it onto the monitor.
+   */
+  dockerState?: DockerCheckState;
 }
 
 /** Everything a probe needs, across transports. */
@@ -88,6 +101,17 @@ export interface CheckOptions {
    * than be killed with a browser session open.
    */
   signal?: AbortSignal;
+  /**
+   * Previous Docker restart samples, when the caller has the monitor.
+   *
+   * Absent, the check judges this inspect alone and a rising restart
+   * count is not a loop. The worker and the recovery probe pass it.
+   * A remote probe agent does not, unless the job carried it.
+   */
+  dockerMemory?: {
+    now: Date;
+    previous: DockerCheckState | null;
+  };
   /**
    * Overrides for the subject the spec carries.
    *
@@ -207,7 +231,60 @@ export async function performCheck(
     signal: options.signal,
   });
 
-  return judgeMeasurement(definition.assertions, config, result);
+  const folded = foldDockerRestart(spec.checkType, config, result, options);
+  const judged = judgeMeasurement(definition.assertions, config, folded.probe);
+  if (!folded.state) return judged;
+  const loop = judged.facts.restartLoop;
+  return {
+    ...judged,
+    dockerState: {
+      ...folded.state,
+      holdResolve: nextHoldResolve({
+        previous: folded.state.holdResolve,
+        verdict: judged.verdict,
+        restartLoop: typeof loop === "string" && loop.length > 0,
+        unhealthyDown: judged.failedAssertions.includes("health-down"),
+      }),
+    },
+  };
+}
+
+/**
+ * Writes the restart-loop sentence onto the facts before judgment.
+ *
+ * The probe cannot do this. It sees one inspect, and the loop is a
+ * comparison with the sample stored on the monitor. Doing it here,
+ * before `judge`, keeps the verdict a pure function of the facts that
+ * then get stored, so the observation can be re-judged later.
+ */
+function foldDockerRestart(
+  checkType: string,
+  config: unknown,
+  probe: ProbeResult,
+  options: CheckOptions,
+): { probe: ProbeResult; state: DockerCheckState | null } {
+  if (checkType !== "docker" || !options.dockerMemory) {
+    return { probe, state: null };
+  }
+  const docker = config as DockerConfig;
+  const containerId = probe.facts.containerId;
+  const restartCount = probe.facts.restartCount;
+  const assessed = assessDockerState({
+    now: options.dockerMemory.now,
+    containerId: typeof containerId === "string" ? containerId : null,
+    restartCount: typeof restartCount === "number" ? restartCount : null,
+    enabled: docker.restartLoopEnabled,
+    threshold: docker.restartLoopThreshold,
+    windowMinutes: docker.restartLoopWindowMinutes,
+    previous: options.dockerMemory.previous,
+  });
+  return {
+    state: assessed.state,
+    probe: {
+      ...probe,
+      facts: { ...probe.facts, restartLoop: assessed.reason },
+    },
+  };
 }
 
 /**

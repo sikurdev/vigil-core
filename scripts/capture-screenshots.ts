@@ -147,6 +147,7 @@ async function main() {
   const page = await browser.newPage({
     viewport: VIEWPORT,
     deviceScaleFactor: 2,
+    colorScheme: "dark",
   });
   await signIn(page);
 
@@ -264,12 +265,9 @@ async function main() {
   );
 
 
-  // The site shows the product in whichever scheme the visitor's system
-  // prefers, so every capture the landing page embeds exists twice: the
-  // porcelain original and a charcoal `-dark` twin, photographed from
-  // the same build with the OS preference forced. Captures that only
-  // GitHub renders (the READMEs) stay light; GitHub pages are the
-  // reader's theme, not ours.
+  // Public product captures use the supported dark theme. Keep the historic
+  // -dark filenames as compatibility assets for existing marketing/doc links;
+  // both sets are fresh captures of this build, never recolored copies.
   const darkPage = await browser.newPage({
     viewport: VIEWPORT,
     deviceScaleFactor: 2,
@@ -280,19 +278,19 @@ async function main() {
     darkPage,
     "/dashboard",
     "dashboard-dark.png",
-    "The dashboard in the charcoal night scheme, for the landing page's dark rendering",
+    "The dashboard in the native dark theme, using the legacy dark asset filename",
   );
   await fullPage(
     darkPage,
     `/incidents/${ids.incidentId}`,
     "incident-detail-dark.png",
-    "The open incident in the charcoal night scheme, for the landing page's dark rendering",
+    "The open incident in the native dark theme, using the legacy dark asset filename",
   );
   await fullPage(
     darkPage,
     "/settings/import",
     "kuma-import-dark.png",
-    "The Uptime Kuma importer in the charcoal night scheme, for the landing page's dark rendering",
+    "The Uptime Kuma importer in the native dark theme, using the legacy dark asset filename",
   );
 
   await browser.close();

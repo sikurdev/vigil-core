@@ -23,7 +23,7 @@ services:
       retries: 10
 
   migrate:
-    image: ghcr.io/sikurdev/vigil-core-worker:${VIGIL_VERSION:-1.30.0}
+    image: ghcr.io/sikurdev/vigil-core-worker:${VIGIL_VERSION:-1.31.0}
     command: ["node_modules/.bin/drizzle-kit", "migrate"]
     environment:
       <<: *database-url
@@ -33,7 +33,7 @@ services:
 
   web:
     <<: *restart
-    image: ghcr.io/sikurdev/vigil-core-web:${VIGIL_VERSION:-1.30.0}
+    image: ghcr.io/sikurdev/vigil-core-web:${VIGIL_VERSION:-1.31.0}
     environment:
       <<: *database-url
       BETTER_AUTH_SECRET: ${BETTER_AUTH_SECRET:?set BETTER_AUTH_SECRET in Easypanel}
@@ -65,7 +65,7 @@ services:
 
   worker:
     <<: *restart
-    image: ghcr.io/sikurdev/vigil-core-worker:${VIGIL_VERSION:-1.30.0}
+    image: ghcr.io/sikurdev/vigil-core-worker:${VIGIL_VERSION:-1.31.0}
     environment:
       <<: *database-url
       BETTER_AUTH_SECRET: ${BETTER_AUTH_SECRET:?set BETTER_AUTH_SECRET in Easypanel}

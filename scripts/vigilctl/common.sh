@@ -32,20 +32,33 @@ EX_REFUSED=20
 # Set by the entrypoint from --yes.
 ASSUME_YES="${ASSUME_YES:-no}"
 
-# Color only when a person is looking. A doctor report is routinely
-# redirected into a support thread or a CI log, and escape codes in
-# there are noise on top of the thing being reported.
-if [ -t 1 ]; then
-  C_OK=$'\033[32m'
-  C_WARN=$'\033[33m'
-  C_FAIL=$'\033[31m'
-  C_OFF=$'\033[0m'
-else
-  C_OK=""
-  C_WARN=""
-  C_FAIL=""
-  C_OFF=""
-fi
+# The terminal owns its background and text palette. Use weight for hierarchy,
+# and reserve color for confirmed success or failure. Each stream decides for
+# itself: redirecting stderr must not put escapes into an otherwise plain log.
+# NO_COLOR and a dumb terminal disable all styling, including bold.
+ui_color_enabled() {
+  [ -t "$1" ] && [ -z "${NO_COLOR:-}" ] && [ "${TERM:-dumb}" != "dumb" ]
+}
+
+init_ui() {
+  C_BOLD="" C_OK="" C_WARN="" C_FAIL="" C_OFF=""
+  E_BOLD="" E_FAIL="" E_OFF=""
+  if ui_color_enabled 1; then
+    C_BOLD=$'\033[1m'
+    C_OK=$'\033[32m'
+    C_WARN="$C_BOLD"
+    C_FAIL=$'\033[31m'
+    C_OFF=$'\033[0m'
+  fi
+  if ui_color_enabled 2; then
+    E_BOLD=$'\033[1m'
+    E_FAIL=$'\033[31m'
+    E_OFF=$'\033[0m'
+  fi
+}
+init_ui
+
+heading() { printf '%s%s%s\n' "$C_BOLD" "$1" "$C_OFF"; }
 
 # How long the queue may go without a scheduler pass before the worker
 # counts as dead.
@@ -57,9 +70,10 @@ fi
 # reported inside one check interval of most installations.
 WORKER_STALE_SECONDS=300
 
-say() { printf 'vigilctl: %s\n' "$1"; }
+say() { printf '%svigilctl%s: %s\n' "$C_BOLD" "$C_OFF" "$1"; }
+success() { printf '%svigilctl%s: %s%s%s\n' "$C_BOLD" "$C_OFF" "$C_OK" "$1" "$C_OFF"; }
 detail() { printf '  %s\n' "$1"; }
-warn() { printf 'vigilctl: %s\n' "$1" >&2; }
+warn() { printf '%svigilctl%s: %s\n' "$E_BOLD" "$E_OFF" "$1" >&2; }
 
 # ── the three exits that are not success ─────────────────────────────
 #
@@ -69,19 +83,19 @@ warn() { printf 'vigilctl: %s\n' "$1" >&2; }
 # reports all of them and then exits through here with the first.
 
 usage_error() {
-  printf 'vigilctl: %s\n' "$1" >&2
+  warn "$1"
   printf '  Run `vigilctl help` for the commands and their options.\n' >&2
   exit "$EX_USAGE"
 }
 
 refuse() {
-  printf 'vigilctl: refused: %s\n' "$1" >&2
+  printf '%svigilctl: refused%s: %s\n' "$E_BOLD" "$E_OFF" "$1" >&2
   [ $# -lt 2 ] || printf '  %s\n' "$2" >&2
   exit "$EX_REFUSED"
 }
 
 die() {
-  printf 'vigilctl: failed: %s\n' "$1" >&2
+  printf '%svigilctl: failed%s: %s\n' "$E_FAIL" "$E_OFF" "$1" >&2
   [ $# -lt 2 ] || printf '  %s\n' "$2" >&2
   exit "$EX_FAIL"
 }

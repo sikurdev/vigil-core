@@ -24,10 +24,7 @@ export default async function AppLayout({
   });
 
   return (
-    // The console follows the operating system: porcelain in daylight,
-    // the graphite night scheme under a dark preference. Same ground,
-    // same ink, same hairlines as the public site at the same hour. The
-    // terminal black this system replaced retired with the pixel eye.
+    // The shared shell is included in both Core and Commercial.
     <SidebarProvider className="bg-background text-foreground">
       <a
         href="#main-content"
@@ -45,7 +42,7 @@ export default async function AppLayout({
         role={ctx.role}
       />
       <SidebarInset className="min-w-0">
-        <header className="bg-background sticky top-0 z-10 flex h-[52px] items-center gap-2 border-b px-5">
+        <header className="bg-background sticky top-0 z-10 flex h-14 items-center gap-3 border-b px-5">
           <SidebarTrigger className="-ml-1" />
           {/* The organization's name lives in the sidebar's switcher; the
               bar repeats it only on phones, where the sidebar is closed
@@ -54,7 +51,7 @@ export default async function AppLayout({
         </header>
         <main
           id="main-content"
-          className="mx-auto w-full max-w-[1104px] flex-1 p-6"
+          className="mx-auto w-full max-w-[1320px] flex-1 px-4 py-7 sm:px-7 sm:py-9 lg:px-10"
         >
           {children}
         </main>

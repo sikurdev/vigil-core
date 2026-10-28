@@ -26,7 +26,6 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { db } from "@/db";
 import {
   formatDateTime,
@@ -81,16 +80,29 @@ export default async function IncidentsPage(props: PageProps<"/incidents">) {
         {canCreate && <CreateIncidentDialog />}
       </div>
 
-      <Tabs value={tab}>
-        <TabsList>
-          <TabsTrigger value="active" asChild>
-            <Link href="/incidents">Active</Link>
-          </TabsTrigger>
-          <TabsTrigger value="all" asChild>
-            <Link href="/incidents?tab=all">All</Link>
-          </TabsTrigger>
-        </TabsList>
-      </Tabs>
+      <nav
+        aria-label="Incident views"
+        className="bg-card flex w-fit gap-1 rounded-md border p-1"
+      >
+        {[
+          { value: "active", label: "Active", href: "/incidents" },
+          { value: "all", label: "All", href: "/incidents?tab=all" },
+        ].map((view) => (
+          <Link
+            key={view.value}
+            href={view.href}
+            aria-current={tab === view.value ? "page" : undefined}
+            className={cn(
+              "focus-visible:outline-ring inline-flex min-h-9 items-center rounded-sm px-3 text-sm focus-visible:outline-2 focus-visible:outline-offset-2 max-sm:min-h-11",
+              tab === view.value
+                ? "bg-accent text-foreground"
+                : "text-muted-foreground hover:text-foreground",
+            )}
+          >
+            {view.label}
+          </Link>
+        ))}
+      </nav>
 
       {rows.length === 0 ? (
         tab === "active" ? (

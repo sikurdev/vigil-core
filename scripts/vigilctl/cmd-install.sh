@@ -114,7 +114,7 @@ cmd_install() {
   mkdir -p "$BACKUP_DIR"
   env_fingerprint >"$INSTALL_STAMP"
 
-  say "installed"
+  success "installed"
   report_endpoint
   exit "$EX_OK"
 }

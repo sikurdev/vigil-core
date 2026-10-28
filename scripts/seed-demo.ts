@@ -582,7 +582,7 @@ async function main() {
       incidentId: ongoing.id,
       type: "update",
       message:
-        "DNS for the checkout upstream stopped resolving after the 17:20 infra change. A restart can't fix a missing CNAME, so recovery correctly stood down. Escalated to the platform team.",
+        "DNS for the checkout upstream stopped resolving after the infrastructure change. Both restart attempts failed verification, so the attempt limit stopped automation. The missing CNAME needs a manual DNS repair. Escalated to the platform team.",
       createdBy: ids.responder,
       createdAt: new Date(checkoutDownSince + 9 * MIN),
     },

@@ -41,6 +41,15 @@ export interface ObservedState {
    */
   previousStatus: MonitorStatus;
   now: Date;
+  /**
+   * Whether a degraded sample may close an open incident.
+   *
+   * True for every check that has always worked this way. False when
+   * the open incident was opened by a Docker restart loop or by an
+   * unhealthy healthcheck that this monitor counts as down: a later
+   * amber sample is not evidence that either of those recovered.
+   */
+  degradedResolves?: boolean;
 }
 
 export function deriveStatus(
@@ -135,6 +144,7 @@ export function reconcile(
     // Never on `indeterminate` either: closing because the probe stopped
     // working would report a recovery nobody observed.
     resolveIncidents:
-      observed.verdict === "up" || observed.verdict === "degraded",
+      observed.verdict === "up" ||
+      (observed.verdict === "degraded" && observed.degradedResolves !== false),
   };
 }

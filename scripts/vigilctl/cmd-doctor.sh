@@ -20,15 +20,15 @@ DOCTOR_FAILURES=0
 DOCTOR_WARNINGS=0
 
 check_ok() {
-  printf '  %sok%s    %-28s %s\n' "$C_OK" "$C_OFF" "$1" "${2:-}"
+  printf '  %sok%s    %s%-28s%s %s\n' "$C_OK" "$C_OFF" "$C_BOLD" "$1" "$C_OFF" "${2:-}"
 }
 check_warn() {
   DOCTOR_WARNINGS=$((DOCTOR_WARNINGS + 1))
-  printf '  %swarn%s  %-28s %s\n' "$C_WARN" "$C_OFF" "$1" "${2:-}"
+  printf '  %swarn%s  %s%-28s%s %s\n' "$C_WARN" "$C_OFF" "$C_BOLD" "$1" "$C_OFF" "${2:-}"
 }
 check_fail() {
   DOCTOR_FAILURES=$((DOCTOR_FAILURES + 1))
-  printf '  %sFAIL%s  %-28s %s\n' "$C_FAIL" "$C_OFF" "$1" "${2:-}"
+  printf '  %sFAIL%s  %s%-28s%s %s\n' "$C_FAIL" "$C_OFF" "$C_BOLD" "$1" "$C_OFF" "${2:-}"
 }
 
 doctor_usage() {
@@ -52,9 +52,9 @@ cmd_doctor() {
     esac
   done
 
-  printf 'vigilctl doctor: %s\n\n' "$REPO"
+  printf '%svigilctl doctor%s: %s\n\n' "$C_BOLD" "$C_OFF" "$REPO"
 
-  printf 'prerequisites\n'
+  heading "prerequisites"
   local problem
   problem="$(docker_problem)"
   if [ -n "$problem" ]; then
@@ -68,16 +68,20 @@ cmd_doctor() {
   check_ok "docker" "$(docker version --format '{{.Server.Version}}' 2>/dev/null || echo present)"
   check_ok "docker compose" "$(docker compose version --short 2>/dev/null || echo present)"
 
-  printf '\nconfiguration\n'
+  printf '\n'
+  heading "configuration"
   doctor_config
 
-  printf '\nservices\n'
+  printf '\n'
+  heading "services"
   doctor_services
 
-  printf '\ndatabase\n'
+  printf '\n'
+  heading "database"
   doctor_database
 
-  printf '\napplication\n'
+  printf '\n'
+  heading "application"
   doctor_app
 
   printf '\n'
@@ -261,14 +265,15 @@ doctor_app() {
 
 doctor_verdict() {
   if [ "$DOCTOR_FAILURES" -gt 0 ]; then
-    printf 'vigilctl: %d failure(s), %d warning(s)\n' \
-      "$DOCTOR_FAILURES" "$DOCTOR_WARNINGS" >&2
+    printf '%svigilctl%s: %s%d failure(s)%s, %d warning(s)\n' \
+      "$E_BOLD" "$E_OFF" "$E_FAIL" "$DOCTOR_FAILURES" "$E_OFF" "$DOCTOR_WARNINGS" >&2
     exit "$EX_FAIL"
   fi
   if [ "$DOCTOR_WARNINGS" -gt 0 ]; then
-    printf 'vigilctl: healthy, with %d warning(s)\n' "$DOCTOR_WARNINGS"
+    printf '%svigilctl%s: healthy, with %s%d warning(s)%s\n' \
+      "$C_BOLD" "$C_OFF" "$C_WARN" "$DOCTOR_WARNINGS" "$C_OFF"
     exit "$EX_NOOP"
   fi
-  printf 'vigilctl: healthy\n'
+  printf '%svigilctl%s: %shealthy%s\n' "$C_BOLD" "$C_OFF" "$C_OK" "$C_OFF"
   exit "$EX_OK"
 }

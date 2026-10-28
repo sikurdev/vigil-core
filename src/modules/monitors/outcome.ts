@@ -26,6 +26,7 @@ import { describeMonitorTarget } from "@/modules/monitors/spec";
 import type { CheckResult } from "./check";
 import { evaluateMonitor } from "./evaluate";
 import { numberFact } from "./types/conditions";
+import { dockerIncidentLines } from "./types/docker-restart";
 import { recordCheckOutcome, type Monitor } from "./service";
 import { checkTypeKind } from "./types/catalog";
 
@@ -240,6 +241,11 @@ export async function applyOutcome(
       updated,
       outcome.error ?? "check failed",
     );
+    if (created) {
+      for (const line of dockerIncidentLines(outcome)) {
+        await recordSystemEvent(db, created.id, line);
+      }
+    }
     // Level-triggered on "this incident has not been acted on", not on
     // "I am the transaction that inserted it".
     //

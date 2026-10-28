@@ -4,6 +4,7 @@ import type { DbClient } from "@/db";
 import { monitors } from "@/db/schema";
 
 import { judgeMeasurement, performCheck, type CheckOptions } from "./check";
+import { readDockerCheckState } from "./types/docker-restart";
 import type { CheckResult } from "./check";
 import { lastHeartbeat } from "./heartbeat";
 import type { Monitor } from "./service";
@@ -49,7 +50,17 @@ export async function evaluateMonitor(
   // Unknown to this build: `performCheck` owns that answer, and gives
   // the same "not available in this build" indeterminate it always has.
   if (definition === undefined || isActiveType(definition)) {
-    return performCheck(toCheckSpec(monitor), options);
+    return performCheck(toCheckSpec(monitor), {
+      ...options,
+      ...(monitor.checkType === "docker"
+        ? {
+            dockerMemory: {
+              now,
+              previous: readDockerCheckState(monitor.dockerState),
+            },
+          }
+        : {}),
+    });
   }
 
   if (isPassiveType(definition)) {

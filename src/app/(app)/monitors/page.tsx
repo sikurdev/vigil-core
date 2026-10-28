@@ -85,24 +85,24 @@ export default async function MonitorsPage() {
           <Card className="gap-0 py-0">
             <Table>
               <TableHeader>
-                {/* Phones keep the columns an on-call engineer acts on:
-                    status, name, uptime. The rest returns with room. */}
+                {/* Small screens keep status, name and uptime. Response time,
+                    freshness and target detail return as the workspace widens. */}
                 <TableRow className="hover:bg-transparent">
                   <TableHead className="w-10 pl-4 sm:w-32">
                     <span className="max-sm:sr-only">Status</span>
                   </TableHead>
                   <TableHead>Name</TableHead>
-                  <TableHead className="hidden lg:table-cell">URL</TableHead>
+                  <TableHead className="hidden 2xl:table-cell">URL</TableHead>
                   <TableHead className="text-right">
                     Uptime<span className="hidden sm:inline"> · 24h</span>
                   </TableHead>
-                  <TableHead className="hidden text-right md:table-cell">
+                  <TableHead className="hidden text-right lg:table-cell">
                     Avg response
                   </TableHead>
-                  <TableHead className="hidden text-right md:table-cell">
+                  <TableHead className="hidden text-right 2xl:table-cell">
                     Interval
                   </TableHead>
-                  <TableHead className="hidden text-right sm:table-cell">
+                  <TableHead className="hidden text-right xl:table-cell">
                     Last checked
                   </TableHead>
                   <TableHead className="w-12 pr-4 text-right">
@@ -124,12 +124,12 @@ export default async function MonitorsPage() {
                     <TableCell>
                       <Link
                         href={`/monitors/${monitor.id}`}
-                        className="block max-w-[44vw] truncate font-medium hover:underline sm:max-w-none"
+                        className="block max-w-[35vw] truncate font-medium hover:underline sm:max-w-56"
                       >
                         {monitor.name}
                       </Link>
                     </TableCell>
-                    <TableCell className="hidden lg:table-cell">
+                    <TableCell className="hidden 2xl:table-cell">
                       <span className="text-muted-foreground block max-w-56 truncate font-mono">
                         {monitor.url}
                       </span>
@@ -137,15 +137,15 @@ export default async function MonitorsPage() {
                     <TableCell className="text-right font-mono tabular-nums">
                       {formatUptime(monitor.uptime24hPct)}
                     </TableCell>
-                    <TableCell className="hidden text-right font-mono tabular-nums md:table-cell">
+                    <TableCell className="hidden text-right font-mono tabular-nums lg:table-cell">
                       {monitor.avgResponseMs === null
                         ? "-"
                         : formatDuration(monitor.avgResponseMs)}
                     </TableCell>
-                    <TableCell className="text-muted-foreground hidden text-right font-mono tabular-nums md:table-cell">
+                    <TableCell className="text-muted-foreground hidden text-right font-mono tabular-nums 2xl:table-cell">
                       {formatDuration(monitor.intervalSeconds * 1000)}
                     </TableCell>
-                    <TableCell className="text-muted-foreground hidden text-right sm:table-cell">
+                    <TableCell className="text-muted-foreground hidden text-right xl:table-cell">
                       {monitor.lastCheckedAt
                         ? formatRelativeTime(monitor.lastCheckedAt)
                         : "-"}

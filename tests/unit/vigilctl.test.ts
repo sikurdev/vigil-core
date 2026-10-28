@@ -320,6 +320,71 @@ describe("the command surface", () => {
     const cli = makeInstall();
     const help = cli.run(["help"]);
     expect(help.status).toBe(0);
+    expect(help.output).not.toContain("\u001b[");
+
+    // Exercise the actual output helpers with independent terminal streams.
+    // Bash's terminal predicate is the only simulated part; the renderer,
+    // NO_COLOR/TERM handling and output routing are production code.
+    const render = (
+      stdoutTty: boolean,
+      stderrTty: boolean,
+      noColor = false,
+      term = "xterm",
+    ) =>
+      runShell(
+        cli,
+        [
+          "function [ {",
+          '  if [[ "${1:-}" == -t ]]; then',
+          `    case "$2" in 1) return ${stdoutTty ? 0 : 1} ;; 2) return ${stderrTty ? 0 : 1} ;; esac`,
+          "  fi",
+          '  builtin [ "$@"',
+          "}",
+          `TERM=${term}`,
+          noColor ? "NO_COLOR=1" : "unset NO_COLOR",
+          SOURCE_LIBS,
+          ". scripts/vigilctl/cmd-doctor.sh",
+          'heading "prerequisites"',
+          'check_ok "docker" "present"',
+          'check_warn "configuration" "inspect it"',
+          'check_fail "worker" "stale"',
+          'say "checking"',
+          'success "verified"',
+          'warn "attention"',
+          'die "fixture failure"',
+        ].join("\n"),
+      );
+    const plain = render(false, false);
+    expect(plain.status).toBe(1);
+    expect(`${plain.stdout}${plain.stderr}`).not.toContain("\u001b[");
+    const stripStyle = (value: string) =>
+      value.replace(/\u001b\[[0-9;]*m/g, "");
+    for (const [outTty, errTty] of [
+      [true, false],
+      [false, true],
+      [true, true],
+    ] as const) {
+      const result = render(outTty, errTty);
+      expect(result.status).toBe(1);
+      expect(stripStyle(result.stdout)).toBe(plain.stdout);
+      expect(stripStyle(result.stderr)).toBe(plain.stderr);
+      expect(result.stdout.includes("\u001b[")).toBe(outTty);
+      expect(result.stderr.includes("\u001b[")).toBe(errTty);
+      if (outTty) {
+        expect(result.stdout).toContain("\u001b[1mprerequisites\u001b[0m");
+        expect(result.stdout).toContain("\u001b[32mok\u001b[0m");
+        expect(result.stdout).toContain("\u001b[31mFAIL\u001b[0m");
+        expect(result.stdout).not.toContain("\u001b[33m");
+      }
+    }
+    for (const result of [
+      render(true, true, true),
+      render(true, true, false, "dumb"),
+    ]) {
+      expect(result.stdout).toBe(plain.stdout);
+      expect(result.stderr).toBe(plain.stderr);
+    }
+    expect(cli.calls()).toHaveLength(0);
     for (const command of [
       "install",
       "doctor",

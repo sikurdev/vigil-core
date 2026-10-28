@@ -25,6 +25,7 @@ const MAX_BODY_BYTES = 256 * 1024;
 const DEFAULT_TCP_PORT = 2375;
 
 interface InspectResponse {
+  Id?: string;
   State?: {
     Running?: boolean;
     Status?: string;
@@ -260,19 +261,25 @@ export function interpret(
     );
   }
 
-  const state = (parsed as InspectResponse).State;
-  const restartCount = (parsed as InspectResponse).RestartCount;
+  const bodyObject = parsed as InspectResponse;
+  const state = bodyObject.State;
+  const restartCount = bodyObject.RestartCount;
+  const containerId = bodyObject.Id;
 
   return {
     facts: {
       running: typeof state?.Running === "boolean" ? state.Running : null,
       state: typeof state?.Status === "string" ? state.Status : null,
       // Absent unless the image declares a HEALTHCHECK, which most do
-      // not. Null, not "healthy" — the degraded assertion only fires on
+      // not. Null, not "healthy". The assertion only fires on
       // `unhealthy`, so an image that never opted in stays silent.
       health:
         typeof state?.Health?.Status === "string" ? state.Health.Status : null,
       restartCount: typeof restartCount === "number" ? restartCount : null,
+      containerId:
+        typeof containerId === "string" && containerId.length > 0
+          ? containerId
+          : null,
       responseTimeMs,
     },
     responseTimeMs,

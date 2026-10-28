@@ -29,6 +29,26 @@ Every underlying command is still there and still supported. Nothing
 here takes an escape hatch away, and the last section of this page lists
 them.
 
+## Terminal output
+
+Vigil uses bold section headings and labels, with green for confirmed success
+and red for failure. Warnings retain an explicit `warn` label without relying
+on color. The terminal's own foreground and background stay in control; the
+CLI does not paint a screen or change your terminal theme.
+
+Styling is enabled separately for stdout and stderr only when that stream is
+a terminal. Redirected output stays plain text. Set `NO_COLOR=1` or use
+`TERM=dumb` to disable all styling, including bold. For example:
+
+```bash
+NO_COLOR=1 ./vigilctl doctor
+./vigilctl doctor > doctor.txt 2>&1
+```
+
+The layout, diagnostic text, confirmation prompts and exit codes are the same
+with or without styling. No animation, cursor movement or background colors
+are used, so reports remain readable in a terminal, CI log or support thread.
+
 ## Exit codes
 
 Four outcomes, four numbers, the same for every command. A wrapper

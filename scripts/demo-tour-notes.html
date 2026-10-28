@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="en" class="dark" style="color-scheme: dark">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="robots" content="noindex" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>About the product tour | Vigil</title>
+    <style>
+      body {
+        margin: 0;
+        background: #08090a;
+        color: #f2f3f4;
+        font:
+          17px/1.65 system-ui,
+          sans-serif;
+      }
+      main {
+        max-width: 700px;
+        margin: 64px auto;
+        padding: 0 24px;
+      }
+      h1 {
+        font-size: 40px;
+        line-height: 1.1;
+        letter-spacing: -0.035em;
+      }
+      h2 {
+        font-size: 24px;
+        margin-top: 36px;
+      }
+      a {
+        color: #a1cbb0;
+        text-underline-offset: 4px;
+      }
+      a:focus-visible {
+        outline: 2px solid #a1cbb0;
+        outline-offset: 4px;
+      }
+      li {
+        margin: 12px 0;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <a href="/demo/">Back to the tour</a>
+      <h1>A real interface.<br />A recorded sample scenario.</h1>
+      <p>
+        This read-only product tour is a static export of Vigil's interface
+        using seeded sample data. It is not connected to live infrastructure.
+        Navigation works; monitoring, editing, recovery actions and form
+        submissions are disabled.
+      </p>
+      <h2>Tour presentation</h2>
+      <p>
+        The tour uses Vigil’s supported dark product theme. The site’s
+        explanatory pages use a matching dark frame; no screenshot inversion or
+        recoloring is applied.
+      </p>
+      <p>
+        The two guided incident pages place the original timeline before the
+        disabled writing controls. An empty postmortem form is available in a
+        clearly labelled tour-only disclosure. This presentation change makes
+        the recorded outcome easier to inspect; it does not change event data,
+        status, timestamps or the product’s underlying form.
+      </p>
+      <p>
+        Deep links clear the captured sticky header. On phones, recovery-attempt
+        rows stack with their original field labels so the complete outcome is
+        readable without horizontal scrolling. The same progress and navigation
+        controls continue through the separate evidence example. These are
+        tour-only presentation changes; all recorded cell values remain intact.
+      </p>
+      <h2>What the scenarios show</h2>
+      <p>
+        The optional walkthrough starts with Auth Service’s original recorded
+        successful recovery: attempt 1 is verified, then the incident
+        auto-resolves. The monitor’s recovery record contains the verification
+        outcome. It continues to the exhausted Checkout incident below and
+        finishes with a separately labelled current evidence-interface fixture
+        example.
+      </p>
+      <p>
+        Checkout's two automatic recovery attempts failed their verification
+        probes. The attempt limit stopped further automation and escalated the
+        incident. The responder identified a missing DNS record. A human repair
+        task remains open, and the runbook waits before independently checking
+        whether the service is healthy.
+      </p>
+      <h2>Capture provenance</h2>
+      <p>
+        The <a href="/demo/export.manifest.json">export manifest</a> records the
+        capture date and source commit. The current export was rendered from
+        that product source against seeded sample records. Its
+        <code>stableAliases</code> map preserves previously published URLs when
+        fresh seed records receive new IDs. These compatibility paths identify
+        matching scenarios, not unchanged database identifiers. The manifest
+        also discloses the separate read-only tour presentation layer.
+      </p>
+      <p>
+        Product screenshots elsewhere on the site retain their own capture
+        provenance. The tour's observations, timestamps and outcome states are
+        examples, not customer results or performance measurements.
+      </p>
+      <ul>
+        <li>
+          <a href="/demo/incidents.html">Inspect the incident timeline</a>
+        </li>
+        <li><a href="/demo/runbooks.html">Explore the human handover</a></li>
+        <li><a href="/pricing/">Compare editions</a></li>
+        <li><a href="/">Back to Vigil</a></li>
+      </ul>
+    </main>
+  </body>
+</html>

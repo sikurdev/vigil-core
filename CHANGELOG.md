@@ -6,6 +6,59 @@ free edition; entries for commercial-only features live in the other
 repository, because they are not in this one and listing them here would
 describe software you do not have.
 
+## 1.31.0 — 2026-10-28
+
+The Docker check now treats a crash loop and a sustained failing
+healthcheck as down. One additive migration adds `monitors.docker_state`,
+a nullable column for the restart samples. It stays empty until the
+first Docker check.
+
+### Added
+
+- A rising `RestartCount` marks the monitor down. The default is 3
+  restarts inside 10 minutes. The check says
+  `restart loop: N restarts in M min`, where M is the window you set.
+  The failure window still has to elapse before an incident opens. The
+  first sample only records the count, so a container that had already
+  restarted is not an alarm. A new container id, a count that goes
+  backwards, or a gap longer than the window starts a new baseline.
+- Detect restart loops is on the Docker monitor, under Advanced.
+  Turning it off stops the verdict. The count is still stored.
+- A HEALTHCHECK status of `unhealthy` is down by default. `starting`,
+  and a container with no HEALTHCHECK, are not failures. One unhealthy
+  sample does not open an incident. The failure window, column default
+  120 seconds, is what makes it sustained. Unhealthy counts as down is
+  the switch. Off leaves unhealthy as degraded, which does not open an
+  incident.
+- An incident opened by a restart loop, or by unhealthy counted as
+  down, stays open if a later sample is only degraded. It closes when a
+  check is up. The operator timeline records the reason.
+
+### Limits
+
+- The comparison runs on the worker that probes the monitor, from
+  samples stored on that monitor. This edition does not assign checks
+  to remote probes.
+
+## 1.30.1 — 2026-10-27
+
+Core receives the same dark interface refresh as Vigil, without changing
+its monitoring behavior or edition boundary.
+
+### Changed
+
+- Dark is the initial theme, with neutral black and charcoal surfaces and
+  clearer text and control contrast. Explicit light preferences remain
+  available.
+- Interface labels and prose use a system sans-serif stack. Identifiers,
+  timestamps and other machine values retain the local monospaced font.
+- Shared navigation, tables, forms and buttons use the updated spacing
+  and focus treatment.
+- `vigilctl` uses bold headings and labels, green for confirmed success and
+  red for failure. `NO_COLOR` and `TERM=dumb` disable styling. Each output
+  stream is styled only when it is a terminal, keeping redirected logs
+  plain. Commands, confirmations, redaction and exit codes are unchanged.
+
 ## 1.30.0 — 2026-09-04
 
 The process now reports liveness and readiness separately, and this

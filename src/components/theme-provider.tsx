@@ -2,19 +2,14 @@
 
 import { ThemeProvider as NextThemesProvider } from "next-themes";
 
-/**
- * next-themes injects a blocking inline script that applies the stored
- * theme class before first paint — no flash of the wrong theme. Vigil
- * follows the operating system: porcelain in daylight, the graphite
- * night scheme under a dark preference, switching live when the system
- * does. An explicit Light/Dark choice persists in localStorage for the
- * surfaces that offer the toggle (the public status page).
+/** Apply the saved preference before first paint; new visitors start in dark.
+ * Explicit light and system preferences remain available on public status pages.
  */
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
   return (
     <NextThemesProvider
       attribute="class"
-      defaultTheme="system"
+      defaultTheme="dark"
       enableSystem
       disableTransitionOnChange
     >

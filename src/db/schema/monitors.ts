@@ -158,6 +158,18 @@ export const monitors = pgTable(
      * controller stays safe to run at any time having missed anything.
      */
     firstFailureAt: timestamp({ withTimezone: true }),
+    /**
+     * Docker restart memory: the container id last seen, the restart
+     * counts inside the current window, and whether an open incident
+     * must wait for a clean up.
+     *
+     * Runtime, not configuration. The operator's threshold lives in
+     * `config`. This is what the last checks observed, and a clone does
+     * not take it. Null until the first Docker check that had a
+     * container to remember. Core: the comparison is part of the check,
+     * not of the commercial recovery loop.
+     */
+    dockerState: jsonb(),
     paused: boolean().notNull().default(false),
     currentStatus: monitorStatus().notNull().default("unknown"),
     consecutiveFailures: integer().notNull().default(0),

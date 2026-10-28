@@ -150,7 +150,9 @@ test.describe("incident evidence, on the page", () => {
   test("shows the operator what was seen when it opened", async () => {
     await page.goto(`/incidents/${incidentId}`);
 
-    await expect(page.getByText("What was seen when this opened")).toBeVisible({
+    await expect(
+      page.getByText("What was seen when this opened").first(),
+    ).toBeVisible({
       timeout: 15_000,
     });
 

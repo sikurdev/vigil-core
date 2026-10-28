@@ -1,0 +1,1 @@
+ALTER TABLE "monitors" ADD COLUMN "docker_state" jsonb;

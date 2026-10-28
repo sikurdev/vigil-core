@@ -12,7 +12,7 @@
      timestamps, durations, status codes, payloads, log lines — and sans
      is everything the product says, including the counters. There is no
      third family. */
-  --font-sans: var(--font-sans);
+  --font-sans: Arial, Helvetica, ui-sans-serif, system-ui, sans-serif;
   --font-mono: var(--font-mono);
   --font-heading: var(--font-sans);
   --color-line-inner: var(--line-inner);
@@ -63,27 +63,8 @@
   --radius-4xl: calc(var(--radius) * 2.6);
 }
 
-/**
- * The console, in daylight. One identity with the public site: porcelain
- * ground, graphite ink, hairline structure, and colour spent only where
- * it reports an observed state. The terminal scheme this replaces used
- * luminance as its loudness axis; on a light ground that axis does not
- * exist, so state gets a small, accessible semantic range instead —
- * moss for operational, ochre for degraded, the brand red for down —
- * and red stays the only alarm.
- *
- * Surfaces are three tones, not borders everywhere: the paper ground,
- * a slightly raised panel for blocks that group content, and true white
- * only on layers that float (popovers, dialogs, inputs). Hairlines do
- * the rest.
- *
- * Every text value clears WCAG AA against the lightest surface it can
- * land on.
- *
- * `.light` re-declares the same tokens so a surface can pin itself to
- * daylight regardless of the stored theme class on <html>: the console
- * is porcelain even for a visitor whose status-page preference is night.
- */
+/* Light remains available for explicit preferences and printed client reports.
+   The product defaults to the dark identity below. */
 :root,
 .light {
   --background: #f5f5f3;
@@ -133,66 +114,54 @@
   --sidebar-ring: #16181c;
 }
 
-/**
- * Night: charcoal, cut from the same cloth as the porcelain. The
- * daylight paper (#f5f5f2) becomes the ink, the daylight ink becomes
- * the ground, and every gray keeps the porcelain's warm bias, so the
- * two themes read as one object photographed at different hours.
- * Nothing is pure black: the deepest surface is the sidebar's #141412,
- * and content stands on #1c1c1a with soft, wide shadows. States are
- * kept a step quieter than daylight: a muted jade, an amber, a
- * vermilion that reads at 3am without shouting.
- *
- * The `.dark` class serves the running app (next-themes). The media
- * block that follows repeats these tokens for documents that ship
- * without JavaScript, such as the exported demo, so they follow the
- * operating system by themselves. Keep the two lists identical.
- */
+/* Night field: neutral black, legible cool-gray hierarchy, white actions.
+   Green, amber and red describe observed state; they are not decoration.
+   The scriptless media fallback below uses the same tokens. */
 .dark {
-  --background: #1c1c1a;
-  --foreground: #f5f5f2;
-  --card: #232320;
-  --card-foreground: #f5f5f2;
-  --popover: #2a2a27;
-  --popover-foreground: #f5f5f2;
-  --primary: #f5f5f2;
-  --primary-foreground: #1c1c1a;
-  --secondary: #2a2a27;
-  --secondary-foreground: #f5f5f2;
-  --muted: #2a2a27;
-  --muted-foreground: #a6a6a0;
-  --accent: #2f2f2b;
-  --accent-foreground: #f5f5f2;
-  --destructive: #f0524a;
-  --border: #343430;
-  --input: #41413d;
-  --ring: #f5f5f2;
-  --chart-1: #47825e;
-  --chart-2: #d19a2f;
-  --chart-3: #f0524a;
-  --chart-4: #343430;
-  --chart-5: #a6a6a0;
-  --panel: #232320;
-  --line-inner: #2b2b28;
-  --line-tag: #41413d;
-  --line-quiet: #55554f;
-  --faint: #767670;
-  --body-ink: #d9d9d4;
-  --ok: #55ad7d;
-  --ok-dot: #55ad7d;
-  --warn: #d19a2f;
-  --warn-dot: #d19a2f;
-  --sidebar: #141412;
-  --sidebar-foreground: #d9d9d4;
-  --sidebar-primary: #f5f5f2;
-  --sidebar-primary-foreground: #1c1c1a;
-  --sidebar-accent: #262623;
-  --sidebar-accent-foreground: #f5f5f2;
-  --sidebar-border: #262623;
-  --sidebar-ring: #f5f5f2;
+  --background: #08090a;
+  --foreground: #f2f3f4;
+  --card: #111315;
+  --card-foreground: #f2f3f4;
+  --popover: #181b1e;
+  --popover-foreground: #f2f3f4;
+  --primary: #f2f3f4;
+  --primary-foreground: #08090a;
+  --secondary: #181b1e;
+  --secondary-foreground: #f2f3f4;
+  --muted: #181b1e;
+  --muted-foreground: #a3adb4;
+  --accent: #22272b;
+  --accent-foreground: #f2f3f4;
+  --destructive: #ff8279;
+  --border: #30363a;
+  --input: #58636b;
+  --ring: #f2f3f4;
+  --chart-1: #709b80;
+  --chart-2: #e0b86e;
+  --chart-3: #ff8279;
+  --chart-4: #30363a;
+  --chart-5: #a3adb4;
+  --panel: #111315;
+  --line-inner: #252b2f;
+  --line-tag: #58636b;
+  --line-quiet: #68737b;
+  --faint: #969fa5;
+  --body-ink: #c7cdd1;
+  --ok: #91c6a1;
+  --ok-dot: #91c6a1;
+  --warn: #e0b86e;
+  --warn-dot: #e0b86e;
+  --sidebar: #0c0e10;
+  --sidebar-foreground: #c7cdd1;
+  --sidebar-primary: #f2f3f4;
+  --sidebar-primary-foreground: #08090a;
+  --sidebar-accent: #202529;
+  --sidebar-accent-foreground: #f2f3f4;
+  --sidebar-border: #202529;
+  --sidebar-ring: #f2f3f4;
 }
 
-/* Scriptless dark: the same charcoal, applied by the system preference
+/* Scriptless dark: the same neutral palette, applied by the system preference
    when no theme class has been set. The exported demo ships with no
    JavaScript, so this block is the only way it can follow the OS; the
    `.light` guard keeps an explicit light choice (the status page's
@@ -200,47 +169,47 @@
    above by contract. */
 @media (prefers-color-scheme: dark) {
   :root:not(.light):not(.dark) {
-    --background: #1c1c1a;
-    --foreground: #f5f5f2;
-    --card: #232320;
-    --card-foreground: #f5f5f2;
-    --popover: #2a2a27;
-    --popover-foreground: #f5f5f2;
-    --primary: #f5f5f2;
-    --primary-foreground: #1c1c1a;
-    --secondary: #2a2a27;
-    --secondary-foreground: #f5f5f2;
-    --muted: #2a2a27;
-    --muted-foreground: #a6a6a0;
-    --accent: #2f2f2b;
-    --accent-foreground: #f5f5f2;
-    --destructive: #f0524a;
-    --border: #343430;
-    --input: #41413d;
-    --ring: #f5f5f2;
-    --chart-1: #47825e;
-    --chart-2: #d19a2f;
-    --chart-3: #f0524a;
-    --chart-4: #343430;
-    --chart-5: #a6a6a0;
-    --panel: #232320;
-    --line-inner: #2b2b28;
-    --line-tag: #41413d;
-    --line-quiet: #55554f;
-    --faint: #767670;
-    --body-ink: #d9d9d4;
-    --ok: #55ad7d;
-    --ok-dot: #55ad7d;
-    --warn: #d19a2f;
-    --warn-dot: #d19a2f;
-    --sidebar: #141412;
-    --sidebar-foreground: #d9d9d4;
-    --sidebar-primary: #f5f5f2;
-    --sidebar-primary-foreground: #1c1c1a;
-    --sidebar-accent: #262623;
-    --sidebar-accent-foreground: #f5f5f2;
-    --sidebar-border: #262623;
-    --sidebar-ring: #f5f5f2;
+    --background: #08090a;
+    --foreground: #f2f3f4;
+    --card: #111315;
+    --card-foreground: #f2f3f4;
+    --popover: #181b1e;
+    --popover-foreground: #f2f3f4;
+    --primary: #f2f3f4;
+    --primary-foreground: #08090a;
+    --secondary: #181b1e;
+    --secondary-foreground: #f2f3f4;
+    --muted: #181b1e;
+    --muted-foreground: #a3adb4;
+    --accent: #22272b;
+    --accent-foreground: #f2f3f4;
+    --destructive: #ff8279;
+    --border: #30363a;
+    --input: #58636b;
+    --ring: #f2f3f4;
+    --chart-1: #709b80;
+    --chart-2: #e0b86e;
+    --chart-3: #ff8279;
+    --chart-4: #30363a;
+    --chart-5: #a3adb4;
+    --panel: #111315;
+    --line-inner: #252b2f;
+    --line-tag: #58636b;
+    --line-quiet: #68737b;
+    --faint: #969fa5;
+    --body-ink: #c7cdd1;
+    --ok: #91c6a1;
+    --ok-dot: #91c6a1;
+    --warn: #e0b86e;
+    --warn-dot: #e0b86e;
+    --sidebar: #0c0e10;
+    --sidebar-foreground: #c7cdd1;
+    --sidebar-primary: #f2f3f4;
+    --sidebar-primary-foreground: #08090a;
+    --sidebar-accent: #202529;
+    --sidebar-accent-foreground: #f2f3f4;
+    --sidebar-border: #202529;
+    --sidebar-ring: #f2f3f4;
   }
 }
 
@@ -250,6 +219,8 @@
   }
   body {
     @apply bg-background text-foreground;
+    font-size: 14px;
+    line-height: 1.55;
   }
   html {
     @apply font-sans;
@@ -267,5 +238,87 @@
     font-size: 14.5px;
     line-height: 1.6;
     font-variant-numeric: proportional-nums;
+  }
+}
+
+/* Product headings share the website’s direct typographic hierarchy. */
+#main-content h1 {
+  font-size: clamp(27px, 2.4vw, 34px);
+  line-height: 1.15;
+  font-weight: 500;
+  letter-spacing: -0.035em;
+}
+#main-content > div > div:first-child > div > p {
+  line-height: 1.6;
+}
+@media (max-width: 767px) {
+  [data-slot="button"][data-size="default"],
+  [data-slot="button"][data-size="lg"],
+  [data-slot="input"],
+  [data-slot="select-trigger"] {
+    min-height: 44px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* The outcome remains readable on phones without horizontal table navigation. */
+#recovery-record {
+  scroll-margin-top: 80px;
+}
+@media (max-width: 767px) {
+  .vigil-recovery-record,
+  .vigil-recovery-record tbody {
+    display: block;
+    width: 100%;
+  }
+  .vigil-recovery-record thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    padding: 0;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+  .vigil-recovery-record tbody tr {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    padding: 8px 0;
+  }
+  .vigil-recovery-record td {
+    display: block;
+    min-width: 0;
+    padding: 9px 16px;
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+  .vigil-recovery-record td:first-child,
+  .vigil-recovery-record td:last-child {
+    grid-column: 1 / -1;
+  }
+  .vigil-recovery-record td::before {
+    content: attr(data-label);
+    display: block;
+    margin-bottom: 5px;
+    color: var(--muted-foreground);
+    font:
+      11px/1.4 Arial,
+      sans-serif;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+  .vigil-recovery-record td:last-child > span {
+    max-width: none;
+    overflow: visible;
+    white-space: normal;
+    text-overflow: clip;
   }
 }

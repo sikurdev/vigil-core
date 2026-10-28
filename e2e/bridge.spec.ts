@@ -228,8 +228,10 @@ test.describe("Better Stack migration bridge", () => {
 
     // The fleet is visible internally, like any other monitor.
     await page.goto("/monitors");
-    await expect(page.getByText("Demo homepage")).toBeVisible();
-    await expect(page.getByText("Demo database")).toBeVisible();
+    // The name is linked twice: the desktop row and the narrow layout
+    // both stay in the tree. Either one is the monitor.
+    await expect(page.getByText("Demo homepage").first()).toBeVisible();
+    await expect(page.getByText("Demo database").first()).toBeVisible();
     await page.goto("/settings/import/bridge");
   });
 

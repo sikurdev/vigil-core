@@ -465,6 +465,10 @@ export async function cloneMonitor(
       // them one that silently never pages, cannot join a status page,
       // and is swept into someone else's cutover.
       shadowBridgeId: _shadowBridgeId,
+      // Restart memory belongs to the samples this row has seen. A
+      // clone has seen none, and copying the hold would keep an
+      // incident open on a monitor that has never been down.
+      dockerState: _dockerState,
       ...carried
     } = source;
 
@@ -1031,6 +1035,9 @@ export async function recordCheckOutcome(
       firstFailureAt,
       previousStatus: monitor.currentStatus,
       now,
+      // A Docker restart loop, or unhealthy counted as down, sets this
+      // until a later sample is cleanly up. Degraded is not that sample.
+      degradedResolves: outcome.dockerState?.holdResolve !== true,
     },
   );
 
@@ -1129,6 +1136,9 @@ export async function recordCheckOutcome(
           ...(outcome.tlsDaysRemaining === undefined
             ? {}
             : { tlsDaysRemaining: outcome.tlsDaysRemaining }),
+          ...(outcome.dockerState === undefined
+            ? {}
+            : { dockerState: outcome.dockerState }),
         })
         // `paused = false` in the predicate, so a pause that lands while
         // this probe was in flight wins the race. `runMonitorCheck` reads

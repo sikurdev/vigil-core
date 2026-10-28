@@ -191,6 +191,19 @@ describe("reconcile", () => {
     });
   });
 
+  it("does not let a degraded sample close an incident these causes are holding", () => {
+    expect(
+      reconcile(
+        spec,
+        observed({ verdict: "degraded", degradedResolves: false }),
+      ),
+    ).toMatchObject({
+      status: "degraded",
+      openIncident: false,
+      resolveIncidents: false,
+    });
+  });
+
   it("never resolves on a failing verdict, whatever the derived status", () => {
     // The regression this guards: resolve used to key off the derived
     // status, so "failing but inside the window" read as recovery and

@@ -40,12 +40,12 @@ VIGILCTL_HOME="$REPO/scripts/vigilctl"
 . "$VIGILCTL_HOME/stack.sh"
 
 usage() {
+  heading "vigilctl: the lifecycle of a self-hosted Vigil install."
+  printf '\n'
+  heading "Usage: vigilctl COMMAND [OPTIONS]"
+  printf '\n'
+  heading "Commands:"
   cat <<'TXT'
-vigilctl: the lifecycle of a self-hosted Vigil install.
-
-Usage: vigilctl COMMAND [OPTIONS]
-
-Commands:
   install              start or repair the Docker Compose install
   doctor               diagnose it without changing anything
   backup               dump the database and validate the archive
@@ -55,10 +55,14 @@ Commands:
   help                 this
   version              what this checkout is
 
-Global options:
+TXT
+  heading "Global options:"
+  cat <<'TXT'
   --yes                answer every confirmation in advance
 
-Exit codes: 0 done, 10 nothing to do, 20 refused, 1 failed, 2 bad usage.
+TXT
+  heading "Exit codes: 0 done, 10 nothing to do, 20 refused, 1 failed, 2 bad usage."
+  cat <<'TXT'
 Every command takes -h for its own options.
 
 Documentation: docs/VIGILCTL.md

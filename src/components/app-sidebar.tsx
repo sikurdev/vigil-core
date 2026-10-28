@@ -53,12 +53,12 @@ export function AppSidebar({
     <Sidebar collapsible="icon">
       <SidebarHeader>
         {/* The brand lockup, the same one the public site wears: the mark
-            and a widely tracked wordmark. The wordmark yields when the
+            and a compact, readable wordmark. The wordmark yields when the
             sidebar collapses to its rail. */}
-        <div className="flex h-9 items-center gap-2.5 px-2 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-0">
-          <VigilMark className="h-[19px] shrink-0" />
-          <span className="text-[13px] font-medium tracking-[0.28em] group-data-[collapsible=icon]:hidden">
-            VIGIL
+        <div className="flex h-12 items-center gap-2.5 px-2 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-0">
+          <VigilMark className="h-[23px] shrink-0" />
+          <span className="text-[25px] font-semibold tracking-[-0.05em] group-data-[collapsible=icon]:hidden">
+            Vigil
           </span>
         </div>
       </SidebarHeader>

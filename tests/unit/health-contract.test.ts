@@ -30,7 +30,7 @@ import { READINESS_TIMEOUT_MS } from "@/lib/readiness";
  *
  * NOT marked `ee`, and for the same reason that file is not: it
  * discovers which surfaces are present rather than carrying an edition
- * marker. Core keeps the compose files, all three routes and the whole
+ * marker. Core keeps both compose files, all three routes and the whole
  * of `vigilctl`, and it is the edition with the weaker CI — its workflow
  * runs lint, typecheck, test and build and nothing that speaks HTTP — so
  * a guard that deleted itself from Core would remove the only check Core
@@ -53,7 +53,6 @@ const COMPOSE = [
   "docker-compose.yml",
   "scripts/core-overlay/docker-compose.easypanel.yml",
   "docker-compose.easypanel.yml",
-  "deploy/docker-compose.yml",
 ].filter(present);
 
 describe("the endpoints exist and say what they are", () => {
@@ -87,8 +86,7 @@ describe("what the container healthchecks ask", () => {
     // A filter that silently matched nothing would make every assertion
     // below vacuous, which is the failure mode of a discovered list.
     expect(COMPOSE).toContain("docker-compose.yml");
-    expect(COMPOSE).toContain("deploy/docker-compose.yml");
-    expect(COMPOSE.length).toBe(3);
+    expect(COMPOSE.length).toBe(2);
   });
 
   for (const file of COMPOSE) {

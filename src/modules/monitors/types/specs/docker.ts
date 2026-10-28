@@ -2,6 +2,11 @@ import { z } from "zod";
 
 import { DEFAULT_DOCKER_SOCKET, dockerDescriptor } from "../catalog";
 import type { Assertion, CheckTypeSpec, MonitorRowView } from "../contract";
+import {
+  DEFAULT_RESTART_LOOP_THRESHOLD,
+  DEFAULT_RESTART_LOOP_WINDOW_MINUTES,
+  UNHEALTHY_DOWN_REASON,
+} from "../docker-restart";
 import { monitorHostnameSchema } from "../targets";
 import { latencyAssertion } from "./shared";
 
@@ -44,6 +49,16 @@ export interface DockerConfig {
   /** Unix socket path, or a `tcp://host:port` daemon address. */
   socketPath: string;
   degradedThresholdMs: number;
+  /** Compare `RestartCount` across samples. Off still records them. */
+  restartLoopEnabled: boolean;
+  /** Rise inside the window that marks the monitor down. */
+  restartLoopThreshold: number;
+  restartLoopWindowMinutes: number;
+  /**
+   * `unhealthy` is down, and the failure window still has to elapse
+   * before an incident opens. Off keeps the old degraded verdict.
+   */
+  unhealthyIsDown: boolean;
 }
 
 export const dockerStoredSchema = z.object({
@@ -55,12 +70,34 @@ export const dockerStoredSchema = z.object({
     .nullish()
     .transform((value) => value ?? null),
   socketPath: z.string().trim().min(1).max(255).default(DEFAULT_DOCKER_SOCKET),
+  restartLoopEnabled: z.boolean().default(true),
+  restartLoopThreshold: z
+    .number()
+    .int()
+    .min(1)
+    .max(100)
+    .default(DEFAULT_RESTART_LOOP_THRESHOLD),
+  restartLoopWindowMinutes: z
+    .number()
+    .int()
+    .min(1)
+    .max(24 * 60)
+    .default(DEFAULT_RESTART_LOOP_WINDOW_MINUTES),
+  unhealthyIsDown: z.boolean().default(true),
 });
 
 export const dockerConfigSchema: z.ZodType<DockerConfig> = z.object({
   containerName: z.string().max(255).nullable(),
   socketPath: z.string().min(1).max(255),
   degradedThresholdMs: z.number().int().min(100).max(30_000),
+  restartLoopEnabled: z.boolean(),
+  restartLoopThreshold: z.number().int().min(1).max(100),
+  restartLoopWindowMinutes: z
+    .number()
+    .int()
+    .min(1)
+    .max(24 * 60),
+  unhealthyIsDown: z.boolean(),
 });
 
 const isRunning: Assertion<DockerConfig> = {
@@ -80,18 +117,40 @@ const isRunning: Assertion<DockerConfig> = {
   },
 };
 
-const healthy: Assertion<DockerConfig> = {
+function unhealthy(value: unknown): string | null {
+  // Only `unhealthy` is a verdict. Most images declare no HEALTHCHECK
+  // at all and report nothing, and `starting` is a container inside
+  // its grace period. Treating either as a failure would make the
+  // check amber for every image that never opted in.
+  return value === "unhealthy" ? UNHEALTHY_DOWN_REASON : null;
+}
+
+const unhealthyDown: Assertion<DockerConfig> = {
+  id: "health-down",
+  fact: "health",
+  severity: "down",
+  applies: (config) => config.unhealthyIsDown,
+  evaluate: unhealthy,
+};
+
+const unhealthyDegraded: Assertion<DockerConfig> = {
   id: "health",
   fact: "health",
   severity: "degraded",
+  applies: (config) => !config.unhealthyIsDown,
+  evaluate: unhealthy,
+};
+
+const restartLoop: Assertion<DockerConfig> = {
+  id: "restart-loop",
+  fact: "restartLoop",
+  severity: "down",
   evaluate(value) {
-    // Only `unhealthy` is a verdict. Most images declare no HEALTHCHECK
-    // at all and report nothing, and `starting` is a container inside
-    // its grace period — treating either as a failure would make the
-    // check amber for every image that never opted in.
-    return value === "unhealthy"
-      ? "The container's healthcheck is failing"
-      : null;
+    // The comparison lives in `docker-restart.ts`, which needs the
+    // previous sample. This assertion only repeats the sentence it
+    // wrote, so a stored observation can be re-judged without the
+    // memory that produced it.
+    return typeof value === "string" && value.length > 0 ? value : null;
   },
 };
 
@@ -100,15 +159,24 @@ export const dockerSpec: CheckTypeSpec<DockerConfig> = {
   configSchema: dockerConfigSchema,
   storedSchema: dockerStoredSchema,
   targetSchema: monitorHostnameSchema,
-  assertions: [isRunning, healthy, latencyAssertion<DockerConfig>("Answered")],
+  assertions: [
+    isRunning,
+    restartLoop,
+    unhealthyDown,
+    unhealthyDegraded,
+    latencyAssertion<DockerConfig>("Answered"),
+  ],
   fromRow(row: MonitorRowView): DockerConfig {
     const stored = dockerStoredSchema.safeParse(row.config ?? {});
+    const data = stored.success ? stored.data : dockerStoredSchema.parse({});
     return {
-      containerName: stored.success ? stored.data.containerName : null,
-      socketPath: stored.success
-        ? stored.data.socketPath
-        : DEFAULT_DOCKER_SOCKET,
+      containerName: data.containerName,
+      socketPath: data.socketPath,
       degradedThresholdMs: row.degradedThresholdMs,
+      restartLoopEnabled: data.restartLoopEnabled,
+      restartLoopThreshold: data.restartLoopThreshold,
+      restartLoopWindowMinutes: data.restartLoopWindowMinutes,
+      unhealthyIsDown: data.unhealthyIsDown,
     };
   },
   describeTarget(target, _port, config) {

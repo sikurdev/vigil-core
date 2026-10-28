@@ -190,7 +190,7 @@ cmd_update() {
   # the safe direction to fail in.
   printf 'stage=complete\n' >>"$ROLLBACK_STATE"
 
-  say "updated to $to ($(short "$to_sha"))"
+  success "updated to $to ($(short "$to_sha"))"
   detail "The database as it was before this update is at $dump"
   detail "If this version misbehaves: ./vigilctl rollback"
   exit "$EX_OK"
@@ -215,7 +215,7 @@ update_unfinished() {
 # needs the same two facts every time: what broke, and the one command
 # that puts it back.
 update_failed() {
-  printf 'vigilctl: failed: %s\n' "$1" >&2
+  printf '%svigilctl: failed%s: %s\n' "$E_FAIL" "$E_OFF" "$1" >&2
   printf '  The stack is part way through an update. Nothing has been undone.\n' >&2
   printf '  Put it back: ./vigilctl rollback\n' >&2
   printf '  Or read what happened first: docker compose logs migrate app worker\n' >&2

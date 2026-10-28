@@ -155,7 +155,7 @@ cmd_rollback() {
   # applied.
   mv "$ROLLBACK_STATE" "$ROLLBACK_STATE.done-$(stamp)"
 
-  say "rolled back to $(short_sha "$from_sha")"
+  success "rolled back to $(short_sha "$from_sha")"
   [ -z "$safety" ] || detail "The database this replaced is at $safety."
   exit "$EX_OK"
 }
@@ -169,7 +169,7 @@ short_sha() { git -C "$REPO" rev-parse --short "$1" 2>/dev/null || printf '%s' "
 
 rollback_failed() {
   local safety="$1" reason="$2"
-  printf 'vigilctl: failed: %s\n' "$reason" >&2
+  printf '%svigilctl: failed%s: %s\n' "$E_FAIL" "$E_OFF" "$reason" >&2
   printf '  The rollback record is kept, so this command can be run again.\n' >&2
   if [ -n "$safety" ]; then
     printf '  The database as it was before this command is at %s\n' "$safety" >&2

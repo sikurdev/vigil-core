@@ -137,7 +137,7 @@ cmd_restore() {
   wait_for "worker" "$timeout" worker_live ||
     restore_failed "$safety" "the worker never recorded a scheduler pass within ${timeout}s."
 
-  say "restored"
+  success "restored"
   detail "$archive is now the contents of this installation."
   [ -z "$safety" ] || detail "The database it replaced is at $safety."
   exit "$EX_OK"
@@ -148,7 +148,7 @@ cmd_restore() {
 # reading this at 3am should not have to scroll for the second one.
 restore_failed() {
   local safety="$1" reason="$2"
-  printf 'vigilctl: failed: %s\n' "$reason" >&2
+  printf '%svigilctl: failed%s: %s\n' "$E_FAIL" "$E_OFF" "$reason" >&2
   if [ -n "$safety" ]; then
     printf '  The database as it was before this command is at %s\n' "$safety" >&2
     printf '  Put it back with: ./vigilctl restore %s\n' "$safety" >&2

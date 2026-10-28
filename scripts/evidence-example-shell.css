@@ -1,0 +1,157 @@
+@font-face {
+  font-family: Vigil Sans;
+  src: url("/fonts/vigil-sans.woff2") format("woff2");
+  font-weight: 400 700;
+  font-display: swap;
+}
+@font-face {
+  font-family: Vigil Mono;
+  src: url("/fonts/vigil-mono.woff2") format("woff2");
+  font-weight: 400 700;
+  font-display: swap;
+}
+:root {
+  --font-sans: "Vigil Sans", system-ui, sans-serif;
+  --font-mono: "Vigil Mono", ui-monospace, monospace;
+}
+.example-shell {
+  max-width: 940px;
+  margin: auto;
+  padding: 30px 32px 48px;
+}
+.example-shell nav,
+.example-shell footer {
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 18px;
+  font-size: 13px;
+}
+.example-shell a {
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+.example-shell a:focus-visible,
+.example-shell summary:focus-visible,
+.example-shell pre:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 5px;
+}
+.example-shell header {
+  max-width: 730px;
+  margin: 65px 0 28px;
+}
+.example-shell .eyebrow {
+  font: 11px var(--font-mono);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-bottom: 18px;
+}
+.example-shell h1 {
+  font-size: clamp(30px, 5vw, 46px);
+  line-height: 1.08;
+  letter-spacing: -0.04em;
+  font-weight: 500;
+  margin: 0 0 20px;
+}
+.example-shell header > p:last-child {
+  font-size: 16px;
+  line-height: 1.6;
+  color: var(--body-ink);
+}
+.fixture-notice {
+  padding: 20px 0;
+  border-block: 1px solid var(--border);
+  font-size: 13px;
+  line-height: 1.6;
+  margin-bottom: 28px;
+}
+.fixture-notice p {
+  margin: 6px 0 10px;
+  color: var(--body-ink);
+}
+.example-shell #evidence-card {
+  min-width: 0;
+}
+.explanation,
+.sample-data {
+  margin-top: 34px;
+  font-size: 14px;
+  line-height: 1.65;
+}
+.example-shell h2 {
+  font-size: 19px;
+  font-weight: 500;
+  letter-spacing: -0.02em;
+  margin-bottom: 12px;
+}
+.explanation ol {
+  padding-left: 24px;
+  list-style: decimal;
+}
+.explanation li {
+  margin: 8px 0;
+}
+.explanation > p {
+  margin-top: 18px;
+}
+.sample-data details {
+  margin-top: 18px;
+}
+.sample-data summary {
+  cursor: pointer;
+  padding: 14px 0;
+  border-block: 1px solid var(--border);
+}
+.sample-data pre {
+  max-width: 100%;
+  overflow: auto;
+  font: 11px/1.6 var(--font-mono);
+  padding: 18px;
+  background: var(--muted);
+}
+.example-shell footer {
+  margin-top: 48px;
+  border-top: 1px solid var(--border);
+  padding-top: 22px;
+}
+@media (max-width: 600px) {
+  .example-shell {
+    padding: 22px 18px 32px;
+  }
+  .example-shell header {
+    margin-top: 44px;
+  }
+}
+
+/* Explanatory page chrome; the evidence card keeps native product dark tokens. */
+.evidence-example-page {
+  color-scheme: dark;
+  background: #08090a;
+  color: #f2f3f4;
+}
+.example-shell > header > p:last-child,
+.example-shell > .fixture-notice p,
+.example-shell > .explanation,
+.example-shell > .sample-data {
+  color: #bcc2c6;
+}
+.example-shell > .explanation h2,
+.example-shell > .sample-data h2 {
+  color: #f2f3f4;
+}
+.example-shell > nav a,
+.example-shell > footer a,
+.example-shell > .fixture-notice a,
+.example-shell > .sample-data a {
+  color: #a1cbb0;
+}
+.example-shell > .fixture-notice,
+.example-shell > footer,
+.example-shell > .sample-data summary {
+  border-color: #33383c;
+}
+.example-shell > header .eyebrow,
+.example-shell > footer > span {
+  color: #969fa5;
+}
